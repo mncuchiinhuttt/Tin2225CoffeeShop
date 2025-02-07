@@ -1,0 +1,28 @@
+<!-- templates/admin/base_site.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Coffee Shop Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">Coffee Shop Administration</a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    #header {
+        background: #2c3e50;
+        color: #fff;
+    }
+    #header a:link, #header a:visited {
+        color: #fff;
+    }
+    .module h2, .module caption {
+        background: #34495e;
+    }
+    div.breadcrumbs {
+        background: #34495e;
+    }
+</style>
+{% endblock %}

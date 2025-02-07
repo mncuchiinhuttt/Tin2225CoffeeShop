@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            {% if item.image %}
+            <img src="{{ item.image.url }}" class="img-fluid" alt="{{ item.name }}">
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h1>{{ item.name }}</h1>
+            <p class="lead">{{ item.description }}</p>
+            <p class="h3">{{ formatted_price }} VND</p>
+            <p>Category: {{ item.category }}</p>
+            {% if item.is_available %}
+            <span class="badge bg-success">Available</span>
+            {% else %}
+            <span class="badge bg-danger">Not Available</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
