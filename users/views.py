@@ -24,7 +24,7 @@ def register(request):
     return render(request, 'users/register.html', {'form': form})
 
 def menu_list(request):
-    menu_items = MenuItem.objects.filter(is_available=True)
+    menu_items = MenuItem.objects.all()
     return render(request, 'users/menu_list.html', {'menu_items': menu_items})
 
 def menu_detail(request, pk):
