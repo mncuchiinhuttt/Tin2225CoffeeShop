@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
       {
-        "src": "versel_deploymet/wsgi.py",
+        "src": "Tin2225CoffeeShop/wsgi.py",
         "use": "@vercel/python",
         "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
       },
