@@ -14,10 +14,10 @@
         align-items: center; /* Vertically center content */
         justify-content: center; /* Horizontally center content */
         background-color: #f8f9fa;
-        padding: 2rem; /* Add some padding around the page */
+        padding: 2rem; 
     }
 
-    .auth-container {
+    .container {
         width: 100%;
         max-width: 450px;
     }
@@ -28,21 +28,20 @@
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); /* Shadow effect */
         padding: 2.5rem;
         border: 0; /* Remove default border */
-        position: relative;
         overflow: hidden;
     }
 
-    .auth-card::before {
+    /* .auth-card::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 0.5rem; /* Thicker accent line */
-        background: linear-gradient(to right, #007bff, #28a745); /* Bootstrap primary/success gradient */
+        height: 0.5rem;
+        background: linear-gradient(to right, #007bff, #28a745); 
         border-top-left-radius: 1rem;
         border-top-right-radius: 1rem;
-    }
+    } */
 
 
     .auth-header {
@@ -60,7 +59,7 @@
         color: #6c757d;
     }
 
-    .form-group {
+    .form {
         margin-bottom: 1.5rem;
     }
 
@@ -112,30 +111,28 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2><i class="fas fa-sign-in-alt me-2"></i> Welcome Back!</h2>
-                <p class="text-muted">Please login to your account</p>
+    <div class="container" style="left: 35%;  top: 40%; position: absolute; display: flex; flex-direction: column; gap: 1rem;">
+        <div class="auth-header">
+            <h2><i class="fas fa-sign-in-alt me-2"></i> Welcome Back!</h2>
+            <p class="text-muted">Please login to your account</p>
+        </div>
+        <form method="post" class="form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
             </div>
-            <form method="post" class="auth-form">
-                {% csrf_token %}
-                {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <small class="text-danger">{{ error }}</small>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary btn-auth"><i class="fas fa-sign-in-alt me-2"></i> Login</button>
-            </form>
-            <div class="auth-footer">
-                <p class="mb-0">Don't have an account? <a href="{% url 'register' %}">Register here</a> <i class="fas fa-user-plus ms-1"></i></p>
-            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-auth"><i class="fas fa-sign-in-alt me-2"></i> Login</button>
+        </form>
+        <div class="auth-footer">
+            <p class="mb-0">Don't have an account? <a href="{% url 'register' %}">Register here</a> <i class="fas fa-user-plus ms-1"></i></p>
         </div>
     </div>
 </div>
