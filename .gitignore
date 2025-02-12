@@ -302,7 +302,6 @@ typings/
 # Icon must end with two \r
 Icon
 
-
 # Thumbnails
 ._*
 
@@ -321,3 +320,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Pycache
+__pycache__/
