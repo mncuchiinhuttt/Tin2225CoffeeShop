@@ -42,7 +42,14 @@
                     <p class="card-text">{{ item.description|truncatewords:20 }}</p>
                     <p class="card-text"><strong>${{ item.price }}</strong></p>
                     {% if item.is_available %}
+                    <div class="d-flex justify-content-between">
                         <a href="{% url 'menu-detail' item.pk %}" class="btn btn-primary">View Details</a>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'cart-add' item.id %}" class="btn btn-success">Add to Cart</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-secondary">Login to Order</a>
+                        {% endif %}
+                    </div>
                     {% else %}
                         <button class="btn btn-secondary" disabled>Unavailable</button>
                     {% endif %}

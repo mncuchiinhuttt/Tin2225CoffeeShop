@@ -2,25 +2,209 @@
 
 {% load humanize %}
 
+{% block extra_head %}
+<style>
+    .product-image {
+        /* width: 30%;  Removed fixed width */
+        height: 300px; /* Reduced from 400px, adjust as needed */
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .product-image:hover {
+        transform: scale(0.5);
+    }
+
+    .related-item-image {
+        height: 150px; /* Reduced from 200px */
+        object-fit: cover;
+        border-radius: 4px;
+        transition: transform 0.3s ease;
+    }
+
+    .related-item-image:hover {
+        transform: scale(1.05);
+    }
+
+    .product-info {
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .description-text {
+        line-height: 1.6;
+        color: #6c757d;
+        margin-bottom: 2rem;
+        max-height: 100px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .description-text.expanded {
+        max-height: 1000px;
+    }
+
+    .description-toggle {
+        color: #0d6efd;
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 1rem;
+    }
+
+    .description-toggle:hover {
+        text-decoration: underline;
+    }
+
+    .category-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        display: inline-block;
+        transition: background-color 0.3s ease;
+    }
+
+    .category-badge:hover {
+        background-color: #e9ecef;
+    }
+
+    .price-tag {
+        font-size: 2rem;
+        color: #28a745;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+
+    .related-items {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+    }
+
+    .related-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .related-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="container py-4">
+    <section class="product-detail-section mb-5"> <!-- Added section here -->
+    <!-- Main Product Section -->
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6"> <!-- Increased column size for image -->
             {% if item.image %}
-            <img src="{{ item.image.url }}" class="img-fluid" alt="{{ item.name }}">
+            <img src="{{ item.image.url }}" class="product-image img-fluid" alt="{{ item.name }}"> <!-- Added img-fluid class -->
             {% endif %}
         </div>
-        <div class="col-md-6">
-            <h1>{{ item.name }}</h1>
-            <p class="lead">{{ item.description }}</p>
-            <p class="h3">{{ formatted_price }} VND</p>
-            <p>Category: {{ item.category }}</p>
-            {% if item.is_available %}
-            <span class="badge bg-sucess">Available</span>
-            {% else %}
-            <span class="badge bg-danger">Not Available</span>
-            {% endif %}
+        <div class="col-md-6"> <!-- Increased column size for product info to match -->
+            <div class="product-info">
+                <span class="category-badge">{{ item.category }}</span>
+                <h1 class="mb-3">{{ item.name }}</h1>
+
+                <div class="description-text" id="description">
+                    {{ item.description }}
+                </div>
+                <div class="description-toggle" onclick="toggleDescription()">
+                    <span id="toggle-text">Show More</span>
+                    <i class="fas fa-chevron-down" id="toggle-icon"></i>
+                </div>
+
+                <p class="price-tag">{{ formatted_price }} VND</p>
+
+                {% if item.is_available %}
+                    <span class="badge bg-success availability-badge">Available</span>
+                    {% if user.is_authenticated %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'cart-add' item.id %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </a>
+                            <a href="{% url 'cart-view' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-shopping-basket"></i> View Cart
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Login to Order
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-danger availability-badge">Not Available</span>
+                {% endif %}
+            </div>
         </div>
     </div>
+    </section> <!-- End of section -->
+
+    <!-- Related Items Section -->
+    {% if related_items %}
+    <section class="related-items">
+        <h2 class="mb-4">More from {{ item.category }}</h2>
+        <div class="row">
+            {% for related_item in related_items %}
+            {% if related_item.id != item.id %}
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card h-100 related-card">
+                    {% if related_item.image %}
+                    <img src="{{ related_item.image.url }}"
+                         class="card-img-top related-item-image"
+                         alt="{{ related_item.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">{{ related_item.name }}</h5>
+                        <p class="card-text">{{ related_item.price }} VND</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'menu-detail' related_item.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                               <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if user.is_authenticated and related_item.is_available %}
+                            <a href="{% url 'cart-add' related_item.id %}"
+                               class="btn btn-sm btn-success">
+                               <i class="fas fa-cart-plus"></i> Add
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 </div>
+
+{% block extra_js %}
+<script>
+function toggleDescription() {
+    const description = document.getElementById('description');
+    const toggleText = document.getElementById('toggle-text');
+    const toggleIcon = document.getElementById('toggle-icon');
+
+    description.classList.toggle('expanded');
+
+    if (description.classList.contains('expanded')) {
+        toggleText.textContent = 'Show Less';
+        toggleIcon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+    } else {
+        toggleText.textContent = 'Show More';
+        toggleIcon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+    }
+}
+</script>
+{% endblock %}
 {% endblock %}

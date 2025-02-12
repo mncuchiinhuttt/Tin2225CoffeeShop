@@ -1,14 +1,124 @@
 {% extends 'base.html' %}
 
-{% block title %}Home{% endblock %}
-
 {% block content %}
-    <div class="container">
-        <h1>Welcome to Tin2225CoffeeShop</h1>
+<div class="container">
+    <!-- Hero Section -->
+    <div class="py-5 text-center bg-light rounded mb-5">
+        <h1 class="display-4">Welcome to Tin2225 Coffee Shop</h1>
+        <p class="lead">Experience the finest coffee and delicious treats</p>
         {% if user.is_authenticated %}
             <p>Hello, {{ user.username }}!</p>
+            <a href="{% url 'menu-list' %}" class="btn btn-primary btn-lg">Browse Menu</a>
         {% else %}
-            <p>Please log in or register.</p>
+            <div class="mt-4">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg mx-2">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg mx-2">Register</a>
+            </div>
         {% endif %}
     </div>
+
+    <!-- Hot Items Section -->
+    {% if hot_items %}
+    <section class="mb-5">
+        <h2 class="mb-4">Most Popular Items</h2>
+        <div class="row">
+            {% for item in hot_items %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" 
+                         style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <p class="card-text">{{ item.price }} VND</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'menu-detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'cart-add' item.id %}" class="btn btn-sm btn-success">Add to Cart</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- New Items Section -->
+    {% if new_items %}
+    <section class="mb-5">
+        <h2 class="mb-4">New Arrivals</h2>
+        <div class="row">
+            {% for item in new_items %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}"
+                         style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <span class="badge bg-success mb-2">New</span>
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <p class="card-text">{{ item.price }} VND</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'menu-detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'cart-add' item.id %}" class="btn btn-sm btn-success">Add to Cart</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Categories Section -->
+    {% if featured_categories %}
+    <section class="mb-5">
+        <h2 class="mb-4">Browse Categories</h2>
+        <div class="row">
+            {% for category in featured_categories %}
+            <div class="col-md-3 mb-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ category.category }}</h5>
+                        <p class="card-text">{{ category.item_count }} items</p>
+                        <a href="{% url 'menu-list' %}?category={{ category.category }}" 
+                           class="btn btn-outline-primary">Browse</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- About Section -->
+    <section class="py-5 bg-light rounded">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 text-center">
+                <h2 class="mb-4">About Our Coffee Shop</h2>
+                <p class="lead">We pride ourselves on serving the finest coffee and providing exceptional service to our customers.</p>
+                <div class="row mt-4">
+                    <div class="col-4">
+                        <h3 class="h5">Quality</h3>
+                        <p>Premium coffee beans</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="h5">Service</h3>
+                        <p>Fast delivery</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="h5">Value</h3>
+                        <p>Best prices</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}
