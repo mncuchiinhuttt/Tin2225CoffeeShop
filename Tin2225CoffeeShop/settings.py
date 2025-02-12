@@ -85,7 +85,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Tin2225CoffeeShop.wsgi.application'
+WSGI_APPLICATION = 'Tin2225CoffeeShop.wsgi.app'
 
 
 # Database
