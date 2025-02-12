@@ -8,7 +8,7 @@
         <p class="lead">Experience the finest coffee and delicious treats</p>
         {% if user.is_authenticated %}
             <p>Hello, {{ user.username }}!</p>
-            <a href="{% url 'menu-list' %}" class="btn btn-primary btn-lg">Browse Menu</a>
+            <a href="{% url 'menu-list' %}" class="btn btn-primary btn-lg" style="margin-top: 1rem;">Browse Menu</a>
         {% else %}
             <div class="mt-4">
                 <a href="{% url 'login' %}" class="btn btn-primary btn-lg mx-2">Login</a>

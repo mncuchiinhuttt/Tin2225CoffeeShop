@@ -10,6 +10,9 @@ from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta
 
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+
 def home(request):
     # Get hot items (most ordered in the last 30 days)
     thirty_days_ago = timezone.now() - timedelta(days=30)

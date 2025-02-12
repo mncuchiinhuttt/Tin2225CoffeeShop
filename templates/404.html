@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="text-center">
+        <h1 class="display-1 fw-bold text-danger">404</h1>
+        <div class="mb-4">
+            <i class="fas fa-coffee fa-4x text-muted mb-4"></i>
+        </div>
+        <h2 class="mb-4">Oops! Page Not Found</h2>
+        <p class="lead mb-5">
+            The page you're looking for doesn't exist or has been moved.
+            <br>Would you like to try our fresh coffee instead?
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Go Home
+            </a>
+            <a href="{% url 'menu-list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-mug-hot me-2"></i>Browse Menu
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .container {
+        padding: 2rem;
+    }
+
+    .display-1 {
+        font-size: 6rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .fa-coffee {
+        animation: steam 2s ease-in-out infinite;
+    }
+
+    @keyframes steam {
+        0% { transform: translateY(0); opacity: 0.5; }
+        50% { transform: translateY(-10px); opacity: 1; }
+        100% { transform: translateY(0); opacity: 0.5; }
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

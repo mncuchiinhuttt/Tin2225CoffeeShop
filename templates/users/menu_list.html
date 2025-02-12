@@ -2,56 +2,190 @@
 
 {% block extra_head %}
 <style>
+    .menu-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/static/images/coffee-header.jpg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        border-radius: 0.5rem;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-img-container {
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
     .unavailable-item img {
-        filter: grayscale(70%);
-        opacity: 0.7;
+        filter: grayscale(80%);
+        opacity: 0.6;
     }
 
     .badge-unavailable {
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%) rotate(-15deg);
         z-index: 2;
+        padding: 0.5rem 1.5rem;
+        font-size: 1.2rem;
+        background-color: rgba(220, 53, 69, 0.9);
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-text {
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .price-tag {
+        font-size: 1.25rem;
+        color: #28a745;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .category-filter {
+        margin-bottom: 2rem;
+    }
+
+    .btn-filter {
+        margin: 0.25rem;
+        border-radius: 2rem;
+        padding: 0.5rem 1.5rem;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .search-box {
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        border-radius: 2rem;
+        padding: 0.75rem 1.5rem;
+        border: 2px solid #dee2e6;
+    }
+
+    .btn-action {
+        border-radius: 2rem;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Our Menu</h1>
+    <!-- Menu Header -->
+    <div class="menu-header text-center">
+        <h1 class="display-4">Our Menu</h1>
+        <p class="lead" style="margin-bottom:1rem;">Discover our selection of premium coffee and treats</p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="search-box">
+                <input type="text" class="form-control search-input" placeholder="Search menu items...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="category-filter text-md-end">
+                <button class="btn btn-filter active">All</button>
+                <button class="btn btn-filter">Coffee</button>
+                <button class="btn btn-filter">Tea</button>
+                <button class="btn btn-filter">Desserts</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Items Grid -->
     <div class="row">
         {% for item in menu_items %}
-        <div class="col-md-4 mb-4">
+        <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100">
                 {% if item.image %}
-                    <div class="position-relative">
-                        <img src="{{ item.image.url }}"
-                             class="card-img-top {% if not item.is_available %}unavailable-item{% endif %}"
-                             alt="{{ item.name }}"
-                             style="height: 200px; object-fit: cover;">
-                        {% if not item.is_available %}
-                            <span class="badge bg-danger badge-unavailable px-3 py-2">
-                                Unavailable
-                            </span>
-                        {% endif %}
-                    </div>
+                <div class="card-img-container">
+                    <img src="{{ item.image.url }}"
+                         class="card-img-top {% if not item.is_available %}unavailable-item{% endif %}"
+                         alt="{{ item.name }}">
+                    {% if not item.is_available %}
+                    <span class="badge badge-unavailable">
+                        Unavailable
+                    </span>
+                    {% endif %}
+                </div>
                 {% endif %}
                 <div class="card-body {% if not item.is_available %}opacity-75{% endif %}">
                     <h5 class="card-title">{{ item.name }}</h5>
                     <p class="card-text">{{ item.description|truncatewords:20 }}</p>
-                    <p class="card-text"><strong>${{ item.price }}</strong></p>
+                    <p class="price-tag">{{ item.price }} VND</p>
                     {% if item.is_available %}
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'menu-detail' item.pk %}" class="btn btn-primary">View Details</a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'menu-detail' item.pk %}" class="btn btn-outline-primary btn-action">
+                            <i class="fas fa-eye me-1"></i> View
+                        </a>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'cart-add' item.id %}" class="btn btn-success">Add to Cart</a>
+                        <a href="{% url 'cart-add' item.id %}" class="btn btn-success btn-action">
+                            <i class="fas fa-cart-plus me-1"></i> Add
+                        </a>
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-secondary">Login to Order</a>
+                        <a href="{% url 'login' %}" class="btn btn-secondary btn-action">
+                            <i class="fas fa-sign-in-alt me-1"></i> Login
+                        </a>
                         {% endif %}
                     </div>
                     {% else %}
-                        <button class="btn btn-secondary" disabled>Unavailable</button>
+                    <button class="btn btn-secondary btn-action w-100" disabled>
+                        <i class="fas fa-ban me-1"></i> Unavailable
+                    </button>
                     {% endif %}
                 </div>
             </div>
@@ -59,4 +193,39 @@
         {% endfor %}
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    const menuItems = document.querySelectorAll('.col-lg-4');
+
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        menuItems.forEach(item => {
+            const title = item.querySelector('.card-title').textContent.toLowerCase();
+            const description = item.querySelector('.card-text').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Filter buttons
+    const filterButtons = document.querySelectorAll('.btn-filter');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}
