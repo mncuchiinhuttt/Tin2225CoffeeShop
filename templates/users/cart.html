@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Your Cart</h2>
+    {% if cart_items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.menu_item.name }}</td>
+                        <td>{{ item.menu_item.price }} VND</td>
+                        <td>
+                            <form method="POST" action="{% url 'cart-update-quantity' item.id %}" 
+                                  class="d-flex align-items-center" style="max-width: 150px;">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="decrementQuantity(this)">-</button>
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                           min="1" class="form-control text-center" 
+                                           onchange="this.form.submit()"
+                                           style="max-width: 60px;">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="incrementQuantity(this)">+</button>
+                                </div>
+                            </form>
+                        </td>
+                        <td>{{ item.get_total }} VND</td>
+                        <td>
+                            <a href="{% url 'cart-remove' item.id %}" class="btn btn-danger btn-sm">Remove</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3"><strong>Total:</strong></td>
+                        <td colspan="2"><strong>{{ total }} VND</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'menu-list' %}" class="btn btn-outline-primary">Continue Shopping</a>
+            <a href="{% url 'checkout' %}" class="btn btn-primary">Proceed to Checkout</a>
+        </div>
+    {% else %}
+        <p>Your cart is empty.</p>
+        <a href="{% url 'menu-list' %}" class="btn btn-primary">Browse Menu</a>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+function incrementQuantity(button) {
+    const input = button.parentElement.querySelector('input[type=number]');
+    input.value = parseInt(input.value) + 1;
+    input.form.submit();
+}
+
+function decrementQuantity(button) {
+    const input = button.parentElement.querySelector('input[type=number]');
+    const newValue = parseInt(input.value) - 1;
+    if (newValue >= 1) {
+        input.value = newValue;
+        input.form.submit();
+    }
+}
+
+// Prevent manual input of negative numbers
+document.querySelectorAll('input[type=number]').forEach(input => {
+    input.addEventListener('input', function() {
+        if (this.value < 1) this.value = 1;
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
