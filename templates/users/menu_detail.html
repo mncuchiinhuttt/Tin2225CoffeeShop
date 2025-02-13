@@ -160,7 +160,17 @@
                     </div>
                 </div>
 
-                <p class="price-tag">{{ formatted_price }} VND</p>
+                <div class="price-range">
+                    {% with min_price=item.sizes.all|dictsort:"price"|first %}
+                    {% with max_price=item.sizes.all|dictsort:"price"|last %}
+                        {% if min_price.price != max_price.price %}
+                        <p class="price-tag">{{ min_price.price }} - {{ max_price.price }} VND</p>
+                        {% else %}
+                        <p class="price-tag">{{ min_price.price }} VND</p>
+                        {% endif %}
+                    {% endwith %}
+                    {% endwith %}
+                </div>
 
                 {% if item.is_available %}
                     <span class="badge bg-success availability-badge">Available</span>
@@ -206,7 +216,17 @@
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title text-truncate">{{ related_item.name }}</h5>
-                        <p class="card-text">{{ related_item.price }} VND</p>
+                        <div class="price-range">
+                            {% with min_price=related_item.sizes.all|dictsort:"price"|first %}
+                            {% with max_price=related_item.sizes.all|dictsort:"price"|last %}
+                                {% if min_price.price != max_price.price %}
+                                    {{ min_price.price }} - {{ max_price.price }} VND
+                                {% else %}
+                                    {{ min_price.price }} VND
+                                {% endif %}
+                            {% endwith %}
+                            {% endwith %}
+                        </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <a href="{% url 'menu-detail' related_item.id %}"
                                class="btn btn-sm btn-outline-primary">

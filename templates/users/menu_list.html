@@ -160,10 +160,12 @@
         </div>
         <div class="col-md-6">
             <div class="category-filter text-md-end">
-                <button class="btn btn-filter active">All</button>
-                <button class="btn btn-filter">Coffee</button>
-                <button class="btn btn-filter">Tea</button>
-                <button class="btn btn-filter">Desserts</button>
+                <button class="btn btn-filter {% if not selected_category %}active{% endif %}" 
+                        data-category="">All</button>
+                {% for category in categories %}
+                <button class="btn btn-filter {% if category == selected_category %}active{% endif %}" 
+                        data-category="{{ category }}">{{ category }}</button>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -186,7 +188,7 @@
                 <div class="card-body {% if not item.is_available %}opacity-75{% endif %}">
                     <h5 class="card-title">{{ item.name }}</h5>
                     <p class="card-text">{{ item.description|truncatewords:20 }}</p>
-                    <div class="price-range">
+                    <div class="price-range" style="margin-bottom:1rem;">
                         {% with min_price=item.sizes.all|dictsort:"price"|first %}
                         {% with max_price=item.sizes.all|dictsort:"price"|last %}
                             {% if min_price.price != max_price.price %}
@@ -227,7 +229,6 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
     const searchInput = document.querySelector('.search-input');
     const menuItems = document.querySelectorAll('.col-lg-4');
 
@@ -251,8 +252,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
+            const category = this.dataset.category;
+            // Update URL with selected category
+            const url = new URL(window.location);
+            if (category) {
+                url.searchParams.set('category', category);
+            } else {
+                url.searchParams.delete('category');
+            }
+            window.location = url;
         });
     });
 });

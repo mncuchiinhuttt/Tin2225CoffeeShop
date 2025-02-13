@@ -60,7 +60,17 @@ def register(request):
 
 def menu_list(request):
     menu_items = MenuItem.objects.all()
-    return render(request, 'users/menu_list.html', {'menu_items': menu_items})
+    categories = MenuItem.objects.values_list('category', flat=True).distinct()
+    selected_category = request.GET.get('category', '')
+    
+    if selected_category:
+        menu_items = menu_items.filter(category=selected_category)
+    
+    return render(request, 'users/menu_list.html', {
+        'menu_items': menu_items,
+        'categories': categories,
+        'selected_category': selected_category
+    })
 
 def menu_detail(request, pk):
     item = get_object_or_404(MenuItem, pk=pk)
