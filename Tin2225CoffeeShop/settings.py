@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-a@)c6$!_csb#8^0xgo#o^7+44f=&apb2h$_bz^8td15u_*nq^z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', '.now.sh']
 
@@ -94,10 +94,10 @@ WSGI_APPLICATION = 'Tin2225CoffeeShop.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('SUPABASE_POSTGRES_DATABASE'),
-        'USER': os.environ.get('SUPABASE_POSTGRES_USER'),
-        'PASSWORD': os.environ.get('SUPABASE_POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('SUPABASE_POSTGRES_HOST'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
     }
 }
