@@ -9,8 +9,8 @@ from django.conf.urls import handler404
 handler404 = 'users.views.custom_404'
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', user_views.home, name='home'),
+    path('admin/', admin.site.urls),
     path('register/', user_views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', user_views.logout_view, name='logout'),
@@ -24,5 +24,7 @@ urlpatterns = [
     path('cart/update/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
 ]
 
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

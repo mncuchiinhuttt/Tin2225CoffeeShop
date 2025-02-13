@@ -118,6 +118,28 @@
     .btn-action:hover {
         transform: translateY(-2px);
     }
+    .size-selector {
+        margin: 1.5rem 0;
+    }
+    
+    .btn-group {
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .btn-check + .btn {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .price-range {
+        font-size: 1.1rem;
+        color: #28a745;
+        font-weight: 600;
+        margin: 0.5rem 0;
+    }
 </style>
 {% endblock %}
 
@@ -153,9 +175,7 @@
             <div class="card h-100">
                 {% if item.image %}
                 <div class="card-img-container">
-                    <img src="{{ item.image.url }}"
-                         class="card-img-top {% if not item.is_available %}unavailable-item{% endif %}"
-                         alt="{{ item.name }}">
+                    <img src="{{ item.get_image_url }}" class="card-img-top" alt="{{ item.name }}">
                     {% if not item.is_available %}
                     <span class="badge badge-unavailable">
                         Unavailable
@@ -166,7 +186,17 @@
                 <div class="card-body {% if not item.is_available %}opacity-75{% endif %}">
                     <h5 class="card-title">{{ item.name }}</h5>
                     <p class="card-text">{{ item.description|truncatewords:20 }}</p>
-                    <p class="price-tag">{{ item.price }} VND</p>
+                    <div class="price-range">
+                        {% with min_price=item.sizes.all|dictsort:"price"|first %}
+                        {% with max_price=item.sizes.all|dictsort:"price"|last %}
+                            {% if min_price.price != max_price.price %}
+                                {{ min_price.price }} - {{ max_price.price }} VND
+                            {% else %}
+                                {{ min_price.price }} VND
+                            {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
                     {% if item.is_available %}
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{% url 'menu-detail' item.pk %}" class="btn btn-outline-primary btn-action">

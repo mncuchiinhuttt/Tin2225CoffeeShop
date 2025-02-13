@@ -9,6 +9,7 @@
                 <thead>
                     <tr>
                         <th>Item</th>
+                        <th>Size</th>
                         <th>Price</th>
                         <th>Quantity</th>
                         <th>Total</th>
@@ -18,8 +19,8 @@
                 <tbody>
                     {% for item in cart_items %}
                     <tr>
-                        <td>{{ item.menu_item.name }}</td>
-                        <td>{{ item.menu_item.price }} VND</td>
+                        <td>{{ item.menu_item.name }} ({{ item.size.get_size_display }})</td>
+                        <td>{{ item.size.price }} VND</td>
                         <td>
                             <form method="POST" action="{% url 'cart-update-quantity' item.id %}" 
                                   class="d-flex align-items-center" style="max-width: 150px;">
@@ -43,12 +44,6 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3"><strong>Total:</strong></td>
-                        <td colspan="2"><strong>{{ total }} VND</strong></td>
-                    </tr>
-                </tfoot>
             </table>
         </div>
         <div class="d-flex justify-content-between">

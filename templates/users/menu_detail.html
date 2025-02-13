@@ -4,6 +4,29 @@
 
 {% block extra_head %}
 <style>
+    .size-selector {
+        margin: 1.5rem 0;
+    }
+    
+    .btn-group {
+        width: 100%;
+        gap: 0.5rem;
+    }
+    
+    .btn-check + .btn {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .price-range {
+        font-size: 1.1rem;
+        color: #28a745;
+        font-weight: 600;
+        margin: 0.5rem 0;
+    }
+
     .product-image {
         /* width: 30%;  Removed fixed width */
         height: 300px; /* Reduced from 400px, adjust as needed */
@@ -105,7 +128,7 @@
     <div class="row">
         <div class="col-md-6"> <!-- Increased column size for image -->
             {% if item.image %}
-            <img src="{{ item.image.url }}" class="product-image img-fluid" alt="{{ item.name }}"> <!-- Added img-fluid class -->
+            <img src="{{ item.get_image_url }}" class="card-img-top" alt="{{ item.name }}">
             {% endif %}
         </div>
         <div class="col-md-6"> <!-- Increased column size for product info to match -->
@@ -121,19 +144,37 @@
                     <i class="fas fa-chevron-down" id="toggle-icon"></i>
                 </div>
 
+                <div class="size-selector mb-3">
+                    <label class="form-label">Select Size:</label>
+                    <div class="btn-group" role="group">
+                        {% for size in item.sizes.all %}
+                            {% if size.is_available %}
+                            <input type="radio" class="btn-check" name="size" id="size-{{ size.size }}" 
+                                   value="{{ size.id }}" {% if forloop.first %}checked{% endif %}
+                                   data-price="{{ size.price }}">
+                            <label class="btn btn-outline-primary" for="size-{{ size.size }}">
+                                {{ size.get_size_display }} - {{ size.price }} VND
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <p class="price-tag">{{ formatted_price }} VND</p>
 
                 {% if item.is_available %}
                     <span class="badge bg-success availability-badge">Available</span>
                     {% if user.is_authenticated %}
-                        <div class="d-grid gap-2">
-                            <a href="{% url 'cart-add' item.id %}" class="btn btn-success btn-lg">
+                        <form method="POST" action="{% url 'cart-add' item.id %}" class="d-grid gap-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="size" id="selected-size">
+                            <button type="submit" class="btn btn-success btn-lg">
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </a>
+                            </button>
                             <a href="{% url 'cart-view' %}" class="btn btn-outline-primary">
                                 <i class="fas fa-shopping-basket"></i> View Cart
                             </a>
-                        </div>
+                        </form>
                     {% else %}
                         <div class="d-grid gap-2">
                             <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">
@@ -190,6 +231,21 @@
 
 {% block extra_js %}
 <script>
+document.querySelectorAll('input[name="size"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const price = this.dataset.price;
+        document.querySelector('.price-tag').textContent = `${price} VND`;
+        document.getElementById('selected-size').value = this.value;
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const firstSize = document.querySelector('input[name="size"]');
+    if (firstSize) {
+        document.getElementById('selected-size').value = firstSize.value;
+    }
+});
+
 function toggleDescription() {
     const description = document.getElementById('description');
     const toggleText = document.getElementById('toggle-text');

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegistrationForm
-from .models import MenuItem, CartItem, Order, OrderItem
+from .models import MenuItem, CartItem, Order, OrderItem, Size
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -64,9 +64,9 @@ def menu_list(request):
 
 def menu_detail(request, pk):
     item = get_object_or_404(MenuItem, pk=pk)
-    formatted_price = intcomma(item.price).replace(",", ".")
+    min_price = item.sizes.filter(is_available=True).order_by('price').first()
+    formatted_price = intcomma(min_price.price).replace(",", ".") if min_price else "N/A"
     
-    # Get related items from the same category, excluding current item
     related_items = MenuItem.objects.filter(
         category=item.category,
         is_available=True
@@ -80,15 +80,23 @@ def menu_detail(request, pk):
 
 @login_required
 def cart_add(request, item_id):
-    menu_item = get_object_or_404(MenuItem, id=item_id)
-    cart_item, created = CartItem.objects.get_or_create(
-        user=request.user,
-        menu_item=menu_item
-    )
-    if not created:
-        cart_item.quantity += 1
-        cart_item.save()
-    messages.success(request, f"{menu_item.name} added to cart.")
+    if request.method == 'POST':
+        menu_item = get_object_or_404(MenuItem, id=item_id)
+        size = get_object_or_404(Size, id=request.POST.get('size'))
+        
+        cart_item, created = CartItem.objects.get_or_create(
+            user=request.user,
+            menu_item=menu_item,
+            size=size,
+            defaults={'quantity': 1}
+        )
+        
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
+            
+        messages.success(request, f"{menu_item.name} ({size.get_size_display()}) added to cart.")
+        return redirect('cart-view')
     return redirect('menu-list')
 
 @login_required
@@ -146,8 +154,9 @@ def checkout(request):
             OrderItem.objects.create(
                 order=order,
                 menu_item=cart_item.menu_item,
+                size=cart_item.size.size,
                 quantity=cart_item.quantity,
-                price=cart_item.menu_item.price
+                price=cart_item.size.price
             )
         
         cart_items.delete()  # Clear the cart

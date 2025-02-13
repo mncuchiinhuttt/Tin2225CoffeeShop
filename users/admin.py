@@ -1,9 +1,20 @@
 from django.contrib import admin
-from .models import MenuItem, Order, OrderItem, CartItem  # Add missing imports
+from .models import MenuItem, Order, OrderItem, CartItem, Size
+
+@admin.register(Size)
+class SizeAdmin(admin.ModelAdmin):
+    list_display = ('menu_item', 'size', 'price', 'is_available')
+    list_filter = ('size', 'is_available', 'menu_item__category')
+    search_fields = ('menu_item__name',)
+
+class SizeInline(admin.TabularInline):
+    model = Size
+    extra = 0
 
 @admin.register(MenuItem)
 class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'is_available')
+    inlines = [SizeInline]
+    list_display = ('name', 'category', 'is_available')
     list_filter = ('category', 'is_available')
     search_fields = ('name', 'description')
     ordering = ('category', 'name')
