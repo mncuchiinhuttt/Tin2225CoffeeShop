@@ -94,10 +94,10 @@ WSGI_APPLICATION = 'Tin2225CoffeeShop.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('POSTGRES_DATABASE'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST'),
+        'NAME': os.environ.get('NEON_POSTGRES_DATABASE'),
+        'USER': os.environ.get('NEON_POSTGRES_USER'),
+        'PASSWORD': os.environ.get('NEON_POSTGRES_PASSWORD'),
+        'HOST': os.environ.get('NEON_POSTGRES_HOST'),
         'PORT': os.environ.get('DB_PORT'),
     }
 }
