@@ -9,7 +9,7 @@ class Size(models.Model):
         ('L', 'Large'),
         ('XL', 'Extra Large'),
     ]
-    
+
     menu_item = models.ForeignKey('MenuItem', on_delete=models.CASCADE, related_name='sizes')
     size = models.CharField(max_length=2, choices=SIZES)
     price = models.DecimalField(max_digits=10, decimal_places=0)

@@ -147,7 +147,7 @@
                 <div class="size-selector mb-3">
                     <label class="form-label">Select Size:</label>
                     <div class="btn-group" role="group">
-                        {% for size in item.sizes.all %}
+                        {% for size in item.sizes.all|dictsort:"size" %}
                             {% if size.is_available %}
                             <input type="radio" class="btn-check" name="size" id="size-{{ size.size }}" 
                                    value="{{ size.id }}" {% if forloop.first %}checked{% endif %}
@@ -173,7 +173,7 @@
                 </div>
 
                 {% if item.is_available %}
-                    <span class="badge bg-success availability-badge">Available</span>
+                    <span class="badge bg-success availability-badge" style="margin-bottom: 1rem;">Available</span>
                     {% if user.is_authenticated %}
                         <form method="POST" action="{% url 'cart-add' item.id %}" class="d-grid gap-2">
                             {% csrf_token %}
