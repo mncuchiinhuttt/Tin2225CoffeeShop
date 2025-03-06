@@ -1,14 +1,207 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from .forms import UserRegistrationForm
-from .models import MenuItem, CartItem, Order, OrderItem, Size
+from django.http import JsonResponse
+from .forms import UserRegistrationForm, VoucherForm
+from .models import MenuItem, CartItem, Order, OrderItem, Size, Voucher  
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta
+
+@login_required
+def update_cart_quantity(request, item_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            cart_item = CartItem.objects.get(id=item_id, user=request.user)
+            quantity = int(request.POST.get('quantity', 1))
+            
+            if quantity > 0:
+                cart_item.quantity = quantity
+                cart_item.save()
+                
+                # Calculate new totals
+                cart_items = CartItem.objects.filter(user=request.user)
+                subtotal = sum(item.get_total() for item in cart_items)
+                
+                # Apply voucher if exists
+                discount = 0
+                voucher_code = request.session.get('voucher_code')
+                if voucher_code:
+                    try:
+                        voucher = Voucher.objects.get(code=voucher_code)
+                        if voucher.is_valid() and subtotal >= voucher.min_spend:
+                            discount = min(
+                                voucher.discount_amount,
+                                voucher.max_discount or float('inf')
+                            )
+                    except Voucher.DoesNotExist:
+                        pass
+                
+                total = subtotal - discount
+                
+                return JsonResponse({
+                    'success': True,
+                    'item_total': cart_item.get_total(),
+                    'subtotal': subtotal,
+                    'discount': discount,
+                    'total': total
+                })
+                
+        except CartItem.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Item not found'}, status=404)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid quantity'}, status=400)
+            
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+@login_required
+def checkout(request):
+    cart_items = CartItem.objects.filter(user=request.user)
+    if not cart_items.exists():
+        messages.warning(request, 'Your cart is empty.')
+        return redirect('cart-view')
+    
+    voucher_code = request.session.get('voucher_code')
+    voucher = None
+    subtotal = sum(item.get_total() for item in cart_items)
+    discount = 0
+    
+    # Apply voucher if exists
+    if voucher_code:
+        try:
+            voucher = Voucher.objects.get(code=voucher_code)
+            if voucher.is_valid() and subtotal >= voucher.min_spend:
+                discount = min(
+                    voucher.discount_amount,
+                    voucher.max_discount or float('inf')
+                )
+        except Voucher.DoesNotExist:
+            del request.session['voucher_code']
+    
+    total = subtotal - discount
+    
+    if request.method == 'POST':
+        try:
+            # Create order
+            order = Order.objects.create(
+                user=request.user,
+                delivery_address=request.POST['delivery_address'],
+                phone_number=request.POST['phone_number'],
+                subtotal=subtotal,
+                discount=discount,
+                total_amount=total,
+                voucher=voucher if voucher and voucher.is_valid() else None
+            )
+            
+            # Create order items
+            for cart_item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    menu_item=cart_item.menu_item,
+                    size=cart_item.size.size,
+                    quantity=cart_item.quantity,
+                    price=cart_item.size.price
+                )
+            
+            # Update voucher usage if used
+            if voucher and voucher.is_valid():
+                voucher.times_used += 1
+                voucher.save()
+            
+            # Clear cart and voucher
+            cart_items.delete()
+            if 'voucher_code' in request.session:
+                del request.session['voucher_code']
+            
+            messages.success(request, 'Order placed successfully!')
+            return redirect('order-history')
+            
+        except Exception as e:
+            messages.error(request, f'Error placing order: {str(e)}')
+    
+    context = {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+        'voucher': voucher,
+        'discount': discount,
+        'total': total
+    }
+    return render(request, 'users/checkout.html', context)
+
+@login_required
+def cart_view(request):
+    cart_items = CartItem.objects.filter(user=request.user)
+    voucher_code = request.session.get('voucher_code')
+    voucher = None
+    
+    # Calculate subtotal
+    subtotal = sum(item.get_total() for item in cart_items)
+    discount = 0
+    
+    # Apply voucher if exists
+    if voucher_code:
+        try:
+            voucher = Voucher.objects.get(code=voucher_code)
+            if voucher.is_valid() and subtotal >= voucher.min_spend:
+                discount = min(
+                    voucher.discount_amount,
+                    voucher.max_discount or float('inf')
+                )
+        except Voucher.DoesNotExist:
+            del request.session['voucher_code']
+    
+    total = subtotal - discount
+    
+    context = {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+        'voucher': voucher,
+        'discount': discount,
+        'total': total
+    }
+    return render(request, 'users/cart.html', context)
+
+# Modification needed in views.py
+@login_required
+def apply_voucher(request):
+    if request.method == 'POST':
+        form = VoucherForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            try:
+                voucher = Voucher.objects.get(code=code)
+                cart_total = sum(item.get_total() for item in CartItem.objects.filter(user=request.user))
+                
+                if cart_total < voucher.min_spend:
+                    messages.error(request, f'Minimum spend of {voucher.min_spend} VND required')
+                else:
+                    request.session['voucher_code'] = code
+                    messages.success(request, 'Voucher applied successfully!')
+            except Voucher.DoesNotExist:
+                messages.error(request, 'Invalid voucher code')
+        else:
+            messages.error(request, form.errors['code'][0])
+    
+    # Check if we need to redirect back to checkout
+    next_page = request.POST.get('next')
+    if next_page == 'checkout':
+        return redirect('checkout')
+    return redirect('cart-view')
+
+@login_required
+def remove_voucher(request):
+    if 'voucher_code' in request.session:
+        del request.session['voucher_code']
+        messages.success(request, 'Voucher removed successfully!')
+    
+    # Check if we need to redirect back to checkout
+    next_page = request.GET.get('next')
+    if next_page == 'checkout':
+        return redirect('checkout')
+    return redirect('cart-view')
 
 def custom_404(request, exception):
     return render(request, '404.html', status=404)

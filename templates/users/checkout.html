@@ -1,11 +1,51 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+<style>
+    .voucher-box {
+        border-radius: 0.5rem;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .voucher-applied {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .voucher-form {
+        position: relative;
+    }
+
+    .voucher-form .input-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .voucher-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .voucher-success {
+        color: #28a745;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="container py-4">
     <h2 class="mb-4">Checkout</h2>
     
     <div class="row">
         <div class="col-md-8">
+            <!-- Delivery Information Card -->
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="card-title">Delivery Information</h4>
@@ -27,6 +67,43 @@
         </div>
 
         <div class="col-md-4">
+            <!-- Voucher Section -->
+            {% if voucher %}
+            <div class="voucher-applied mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Voucher applied:</strong> {{ voucher.code }}
+                        <div class="small text-success">{{ voucher.description }}</div>
+                    </div>
+                    <a href="{% url 'remove-voucher' %}" class="text-danger" title="Remove voucher">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="voucher-box mb-3">
+                <h6 class="mb-2">Have a voucher?</h6>
+                <form method="POST" action="{% url 'apply-voucher' %}" class="voucher-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="checkout">
+                    <div class="input-group">
+                        <input type="text" name="code" class="form-control" placeholder="Enter voucher code">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if 'voucher' in message.tags %}
+                                <div class="{% if message.tags %}{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Order Summary Card -->
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Order Summary</h4>
@@ -35,13 +112,25 @@
                             <tbody>
                                 {% for item in cart_items %}
                                 <tr>
-                                    <td>{{ item.menu_item.name }} × {{ item.quantity }}</td>
+                                    <td>{{ item.menu_item.name }} ({{ item.size.get_size_display }}) × {{ item.quantity }}</td>
                                     <td class="text-end">{{ item.get_total }} VND</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
+                                    <th>Subtotal:</th>
+                                    <th class="text-end">{{ subtotal }} VND</th>
+                                </tr>
+                                {% if discount %}
+                                <tr class="text-success">
+                                    <td>
+                                        Discount:
+                                    </td>
+                                    <td class="text-end">-{{ discount }} VND</td>
+                                </tr>
+                                {% endif %}
+                                <tr class="fw-bold">
                                     <th>Total:</th>
                                     <th class="text-end">{{ total }} VND</th>
                                 </tr>

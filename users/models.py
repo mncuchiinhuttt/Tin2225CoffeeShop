@@ -1,6 +1,31 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+
+class Voucher(models.Model):
+    code = models.CharField(max_length=20, unique=True)
+    description = models.TextField()
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=0)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    min_spend = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    max_discount = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
+    usage_limit = models.PositiveIntegerField(null=True, blank=True)
+    times_used = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.code} ({self.discount_amount} VND)"
+    
+    def is_valid(self):
+        now = timezone.now()
+        return (
+            self.is_active and
+            self.valid_from <= now <= self.valid_to and
+            (self.usage_limit is None or self.times_used < self.usage_limit)
+        )
 
 class Size(models.Model):
     SIZES = [
@@ -49,7 +74,7 @@ class MenuItem(models.Model):
         """Return image URL, use default if no image exists"""
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
-        return '/static/images/default-menu-item.png'  # Fallback static URL
+        return '/static/images/default-menu-item.png' 
     
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -79,6 +104,11 @@ class Order(models.Model):
     delivery_address = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    voucher = models.ForeignKey(Voucher, on_delete=models.SET_NULL, null=True, blank=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=0, default=0)
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"

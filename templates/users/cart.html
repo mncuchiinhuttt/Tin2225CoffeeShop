@@ -1,60 +1,149 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+<style>
+    .voucher-box {
+        border-radius: 0.5rem;
+        background-color: #f8f9fa;
+    }
+    
+    .voucher-applied {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .voucher-form {
+        position: relative;
+    }
+
+    .voucher-form .input-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .voucher-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .voucher-success {
+        color: #28a745;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .remove-voucher {
+        color: #dc3545;
+        text-decoration: none;
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .remove-voucher:hover {
+        color: #bd2130;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Your Cart</h2>
+<div class="container py-4">
+    <h2 class="mb-4">Your Cart</h2>
     {% if cart_items %}
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Size</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Total</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.menu_item.name }} ({{ item.size.get_size_display }})</td>
-                        <td>{{ item.size.price }} VND</td>
-                        <td>
-                            <form method="POST" action="{% url 'cart-update-quantity' item.id %}" 
-                                  class="d-flex align-items-center" style="max-width: 150px;">
-                                {% csrf_token %}
-                                <div class="input-group">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="decrementQuantity(this)">-</button>
-                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
-                                           min="1" class="form-control text-center" 
-                                           onchange="this.form.submit()"
-                                           style="max-width: 60px;">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="incrementQuantity(this)">+</button>
-                                </div>
-                            </form>
-                        </td>
-                        <td>{{ item.get_total }} VND</td>
-                        <td>
-                            <a href="{% url 'cart-remove' item.id %}" class="btn btn-danger btn-sm">Remove</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex justify-content-between">
-            <a href="{% url 'menu-list' %}" class="btn btn-outline-primary">Continue Shopping</a>
-            <a href="{% url 'checkout' %}" class="btn btn-primary">Proceed to Checkout</a>
+        <div class="row">
+            <!-- Cart items list column -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Size</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td>{{ item.menu_item.name }}</td>
+                                        <td>{{ item.size.get_size_display }}</td>
+                                        <td>{{ item.size.price }} VND</td>
+                                        <td>
+                                            <form method="POST" action="{% url 'cart-update-quantity' item.id %}" 
+                                                class="d-flex align-items-center" style="max-width: 150px;">
+                                                {% csrf_token %}
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary" 
+                                                            onclick="decrementQuantity(this)">−</button>
+                                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                                           min="1" class="form-control text-center">
+                                                    <button type="button" class="btn btn-outline-secondary" 
+                                                            onclick="incrementQuantity(this)">+</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                        <td>{{ item.get_total }} VND</td>
+                                        <td>
+                                            <a href="{% url 'cart-remove' item.id %}" 
+                                               class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order summary column -->
+            <div class="col-md-4">
+                <!-- Order Summary -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>{{ total }} VND</span>
+                        </div>
+                        {% if discount %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Discount:</span>
+                            <span>-{{ discount }} VND</span>
+                        </div>
+                        {% endif %}
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span>{{ total }} VND</span>
+                        </div>
+                        <a href="{% url 'checkout' %}" class="btn btn-success w-100 mt-3">
+                            <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     {% else %}
-        <p>Your cart is empty.</p>
-        <a href="{% url 'menu-list' %}" class="btn btn-primary">Browse Menu</a>
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <p class="lead">Your cart is empty</p>
+            <a href="{% url 'menu-list' %}" class="btn btn-primary">
+                <i class="fas fa-coffee me-2"></i>Browse Menu
+            </a>
+        </div>
     {% endif %}
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -79,6 +168,60 @@ document.querySelectorAll('input[type=number]').forEach(input => {
         if (this.value < 1) this.value = 1;
     });
 });
+
+function updateQuantity(itemId, newQuantity) {
+    const formData = new FormData();
+    formData.append('quantity', newQuantity);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`/cart/update-quantity/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update item total
+            const row = document.querySelector(`#cart-item-${itemId}`);
+            row.querySelector('.item-total').textContent = `${data.item_total} VND`;
+            
+            // Update summary
+            document.querySelector('.subtotal-amount').textContent = `${data.subtotal} VND`;
+            
+            if (data.discount > 0) {
+                document.querySelector('.discount-amount').textContent = `-${data.discount} VND`;
+            }
+            
+            document.querySelector('.total-amount').textContent = `${data.total} VND`;
+        } else {
+            alert('Error updating quantity');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating quantity');
+    });
+}
+
+function incrementQuantity(button) {
+    const input = button.parentElement.querySelector('input[type=number]');
+    const itemId = input.closest('tr').dataset.itemId;
+    const newValue = parseInt(input.value) + 1;
+    input.value = newValue;
+    updateQuantity(itemId, newValue);
+}
+
+function decrementQuantity(button) {
+    const input = button.parentElement.querySelector('input[type=number]');
+    const itemId = input.closest('tr').dataset.itemId;
+    const newValue = parseInt(input.value) - 1;
+    if (newValue >= 1) {
+        input.value = newValue;
+        updateQuantity(itemId, newValue);
+    }
+}
 </script>
-{% endblock %}
 {% endblock %}

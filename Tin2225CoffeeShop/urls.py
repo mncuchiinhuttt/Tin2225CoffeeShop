@@ -22,6 +22,9 @@ urlpatterns = [
     path('checkout/', user_views.checkout, name='checkout'),
     path('orders/', user_views.order_history, name='order-history'),
     path('cart/update/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
+    path('apply-voucher/', user_views.apply_voucher, name='apply-voucher'),
+    path('remove-voucher/', user_views.remove_voucher, name='remove-voucher'),
+    path('cart/update-quantity/<int:item_id>/', user_views.update_cart_quantity, name='cart-update-quantity'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

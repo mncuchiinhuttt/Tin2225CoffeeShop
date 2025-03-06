@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import MenuItem, Order, OrderItem, CartItem, Size
+from .models import MenuItem, Order, OrderItem, CartItem, Size, Voucher
+
+@admin.register(Voucher)
+class VoucherAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_amount', 'valid_from', 'valid_to', 
+                   'is_active', 'times_used')
+    search_fields = ('code',)
+    list_filter = ('is_active', 'valid_from', 'valid_to')
 
 @admin.register(Size)
 class SizeAdmin(admin.ModelAdmin):
