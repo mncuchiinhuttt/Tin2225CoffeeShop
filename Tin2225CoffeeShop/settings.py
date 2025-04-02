@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-a@)c6$!_csb#8^0xgo#o^7+44f=&apb2h$_bz^8td15u_*nq^z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', '.now.sh']
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', '.now.sh', 'tin2225coffeeshop.mncuchiinhuttt.dev']
 
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
