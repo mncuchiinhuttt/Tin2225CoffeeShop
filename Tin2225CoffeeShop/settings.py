@@ -34,19 +34,17 @@ LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 
 # Application definition
-
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.admin',
     'django.contrib.humanize',
     'users',
     'tailwind',
-    'theme',
-    'django_browser_reload'
+    'django_browser_reload',
 ]
 
 TAILWIND_APP_NAME = 'theme'
@@ -172,3 +170,6 @@ LOGGING = {
         },
     },
 }
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SILENCED_SYSTEM_CHECKS = ['security.W019']

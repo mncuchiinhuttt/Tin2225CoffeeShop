@@ -95,3 +95,16 @@ class OrderItem(models.Model):
 
     def get_total(self):
         return self.price * self.quantity
+
+class Comment(models.Model):
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_date = models.DateTimeField(default=timezone.now)
+    updated_date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Comment by {self.user.username} on {self.menu_item.name}'
+
+    class Meta:
+        ordering = ['-created_date']

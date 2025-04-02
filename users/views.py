@@ -3,13 +3,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .forms import UserRegistrationForm
-from .models import MenuItem, CartItem, Order, OrderItem, Size, Category
+from .models import MenuItem, CartItem, Order, OrderItem, Size, Category, Comment
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta
+from .forms import CommentForm
 
 def forgot_password(request):
     return render(request, 'users/forgot_password.html')
@@ -240,3 +241,44 @@ def cart_remove(request, item_id):
 
 def about(request):
     return render(request, 'about.html')
+
+@login_required
+def add_comment(request, menu_item_id):
+    menu_item = get_object_or_404(MenuItem, id=menu_item_id)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.menu_item = menu_item
+            comment.save()
+            messages.success(request, 'Comment added successfully.')
+            return redirect('menu-detail', pk=menu_item.id)
+    else:
+        form = CommentForm()
+    
+    return render(request, 'users/add_comment.html', {
+        'form': form,
+        'menu_item': menu_item
+    })
+
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Comment updated successfully!')
+            return redirect('menu-detail', pk=comment.menu_item.id)
+    else:
+        form = CommentForm(instance=comment)
+    return render(request, 'users/edit_comment.html', {'form': form, 'comment': comment})
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    menu_item_id = comment.menu_item.id
+    comment.delete()
+    messages.success(request, 'Comment deleted successfully!')
+    return redirect('menu-detail', pk=menu_item_id)

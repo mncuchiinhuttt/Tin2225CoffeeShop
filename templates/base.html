@@ -173,5 +173,50 @@ textarea:not([rows]) {
 		{% block content %}
 		{% endblock %}
 	</main>
+
+	<!-- Confirmation Modal -->
+	<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+		<div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+			<h3 class="text-lg font-semibold mb-4" id="confirmTitle">Confirm Action</h3>
+			<p class="text-gray-600 mb-6" id="confirmMessage">Are you sure you want to perform this action?</p>
+			<div class="flex justify-end space-x-4">
+				<button id="confirmCancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+					Cancel
+				</button>
+				<button id="confirmOk" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+					Delete
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	// Confirmation Dialog Function
+	function showConfirmDialog(message, callback) {
+		const modal = document.getElementById('confirmModal');
+		const messageEl = document.getElementById('confirmMessage');
+		const cancelBtn = document.getElementById('confirmCancel');
+		const okBtn = document.getElementById('confirmOk');
+		
+		messageEl.textContent = message;
+		modal.classList.remove('hidden');
+		modal.classList.add('flex');
+		
+		function closeModal() {
+			modal.classList.add('hidden');
+			modal.classList.remove('flex');
+			cancelBtn.removeEventListener('click', closeModal);
+			okBtn.removeEventListener('click', handleConfirm);
+		}
+		
+		function handleConfirm() {
+			closeModal();
+			callback();
+		}
+		
+		cancelBtn.addEventListener('click', closeModal);
+		okBtn.addEventListener('click', handleConfirm);
+	}
+	</script>
 </body>
 </html>

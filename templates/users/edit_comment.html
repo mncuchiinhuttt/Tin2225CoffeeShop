@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Comment - {{ comment.menu_item.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Edit Comment for {{ comment.menu_item.name }}</h1>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'menu-detail' comment.menu_item.id %}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Update Comment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 
