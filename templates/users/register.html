@@ -1,184 +1,133 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load form_tags %}
-
-{% block title %}Register{% endblock %}
-
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<style>
-    .page-wrapper {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-    }
-
-    .auth-container {
-        width: 100%;
-        max-width: 500px;
-        margin: 2rem auto;
-    }
-
-    .auth-card {
-        background-color: #fff;
-        border-radius: 1rem; /* Rounded borders */
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); /* Shadow effect */
-        padding: 2.5rem;
-        border: 0; /* Remove default border */
-        position: relative;
-        overflow: hidden;
-    }
-
-    .auth-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 0.5rem; /* Thicker accent line */
-        background: linear-gradient(to right, #007bff, #28a745); /* Bootstrap primary/success gradient */
-        border-top-left-radius: 1rem;
-        border-top-right-radius: 1rem;
-    }
-
-    .auth-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-    }
-
-    .auth-header h2 {
-        color: #343a40; /* Darker header text */
-        font-weight: bold; /* Bolder font */
-        margin-bottom: 0.5rem;
-    }
-
-    .auth-header p {
-        color: #6c757d;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-        font-weight: 500; /* Slightly lighter label font */
-        color: #495057;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .form-control {
-        border-radius: 0.75rem; /* Rounded form fields */
-        padding: 0.875rem 1rem; /* Padding adjustments */
-        border: 1px solid #ced4da; /* Bootstrap default border color */
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-
-    .form-control:focus {
-        border-color: #007bff; /* Bootstrap primary focus color */
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Bootstrap primary focus shadow */
-    }
-
-    .auth-footer {
-        text-align: center;
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #eee;
-    }
-
-    .btn-auth {
-        width: 100%;
-        padding: 0.875rem 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 0.75rem; /* Rounded button */
-        text-transform: none; /* No uppercase */
-        letter-spacing: 0; /* Reset letter spacing */
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.08); /* Button shadow */
-    }
-
-    .btn-auth:hover {
-        transform: translateY(-2px); /* Hover lift effect */
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); /* Increased shadow on hover */
-    }
-
-    .password-hints {
-        font-size: 0.875rem;
-        color: #6c757d;
-        margin-top: 0.5rem;
-        padding: 0.75rem;
-        background-color: #f8f9fa; /* Lighter background */
-        border-radius: 0.5rem;
-        border: 1px solid #e0e0e0; /* Lighter border */
-    }
-
-    .form-text {
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-
-    .input-group-text {
-        background-color: #e9ecef; /* Light grey background for icons */
-        color: #495057; /* Darker icon color */
-        border: 1px solid #ced4da;
-        border-radius: 0.75rem 0 0 0.75rem; /* Rounded left side */
-    }
-
-    .form-control-icon-start {
-        border-radius: 0 0.75rem 0.75rem 0; /* Rounded right side for input */
-    }
-</style>
-{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-    <div class="container" style="left: 10%;  top: 25%; position: absolute; display: flex; flex-direction: column; gap: 1rem;">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h2><i class="fas fa-user-plus me-2"></i> Create Account</h2>
-                <p class="text-muted">Join our coffee community</p>
-            </div>
-            <form method="post" class="auth-form">
-                {% csrf_token %}
-                {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    <div class="input-group">
-                        {% if field.name == 'username' %}
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                            {{ field }}
-                        {% elif field.name == 'email' %}
-                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                            {{ field }}
-                        {% elif field.name == 'password' %}
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                            {{ field }}
-                        {% elif field.name == 'password_confirmation' %}
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                            {{ field }}
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                    </div>
-                    {% if field.help_text %}
-                        <small class="form-text password-hints">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <small class="text-danger d-block mt-1">{{ error }}</small>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary btn-auth"><i class="fas fa-sign-up-alt me-2"></i> Register</button>
-            </form>
-            <div class="auth-footer">
-                <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login here</a> <i class="fas fa-sign-in-alt ms-1"></i></p>
-            </div>
+<div class="flex min-h-[calc(100vh-2rem)] items-center justify-center p-4">
+    <div class="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg">
+        <!-- Header -->
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-gray-900">Create an account</h2>
+            <p class="mt-2 text-sm text-gray-600">Join Tin2225 Coffee Shop today</p>
         </div>
+
+        <!-- Registration Form -->
+        <form method="post" class="mt-8 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Error Messages -->
+            {% if form.errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm text-red-700">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <p class="mb-1">{{ error }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Username Field -->
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <input type="text" 
+                           name="username" 
+                           id="username" 
+                           required 
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                           placeholder="Choose a username">
+                </div>
+            </div>
+
+            <!-- Email Field -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-envelope text-gray-400"></i>
+                    </div>
+                    <input type="email" 
+                           name="email" 
+                           id="email" 
+                           required 
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                           placeholder="Enter your email">
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label for="password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-gray-400"></i>
+                    </div>
+                    <input type="password" 
+                           name="password1" 
+                           id="password1" 
+                           required 
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                           placeholder="Create a password">
+                </div>
+            </div>
+
+            <!-- Confirm Password Field -->
+            <div>
+                <label for="password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-gray-400"></i>
+                    </div>
+                    <input type="password" 
+                           name="password2" 
+                           id="password2" 
+                           required 
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                           placeholder="Confirm your password">
+                </div>
+            </div>
+
+            <!-- Terms Checkbox -->
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input type="checkbox" 
+                           name="terms" 
+                           id="terms" 
+                           required
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                </div>
+                <div class="ml-2 text-sm">
+                    <label for="terms" class="font-medium text-gray-700">
+                        I agree to the 
+                        <a href="{% url 'terms' %}" class="text-blue-600 hover:text-blue-500">Terms</a>
+                        and
+                        <a href="{% url 'privacy' %}" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                Create account
+            </button>
+        </form>
+        
+        <!-- Login Link -->
+        <p class="mt-4 text-center text-sm text-gray-600">
+            Already have an account?
+            <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">Sign in</a>
+        </p>
     </div>
 </div>
 {% endblock %}

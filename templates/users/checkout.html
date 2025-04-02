@@ -1,141 +1,65 @@
 {% extends 'base.html' %}
 
-{% block extra_head %}
-<style>
-    .voucher-box {
-        border-radius: 0.5rem;
-        background-color: #f8f9fa;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .voucher-applied {
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .voucher-form {
-        position: relative;
-    }
-
-    .voucher-form .input-group {
-        margin-bottom: 0.5rem;
-    }
-
-    .voucher-error {
-        color: #dc3545;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    .voucher-success {
-        color: #28a745;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4">Checkout</h2>
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-8">Checkout</h2>
     
-    <div class="row">
-        <div class="col-md-8">
-            <!-- Delivery Information Card -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4 class="card-title">Delivery Information</h4>
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="phone_number" class="form-label">Phone Number*</label>
-                            <input type="tel" class="form-control" id="phone_number" name="phone_number" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="delivery_address" class="form-label">Delivery Address*</label>
-                            <textarea class="form-control" id="delivery_address" name="delivery_address" rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Place Order</button>
-                        <a href="{% url 'cart-view' %}" class="btn btn-outline-secondary">Back to Cart</a>
-                    </form>
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Delivery Information -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h4 class="text-xl font-semibold mb-6">Delivery Information</h4>
+                <form method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    <div>
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
+                        <input type="tel" 
+                               class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200" 
+                               id="phone_number" 
+                               name="phone_number" 
+                               required>
+                    </div>
+                    <div>
+                        <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-1">Delivery Address*</label>
+                        <textarea class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200" 
+                                  id="delivery_address" 
+                                  name="delivery_address" 
+                                  rows="3" 
+                                  required></textarea>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" 
+                                class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
+                            Place Order
+                        </button>
+                        <a href="{% url 'cart-view' %}" 
+                           class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-center">
+                            Back to Cart
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <!-- Voucher Section -->
-            {% if voucher %}
-            <div class="voucher-applied mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Voucher applied:</strong> {{ voucher.code }}
-                        <div class="small text-success">{{ voucher.description }}</div>
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h4 class="text-xl font-semibold mb-6">Order Summary</h4>
+                <div class="space-y-4">
+                    {% for item in cart_items %}
+                    <div class="flex justify-between items-center py-2 border-b last:border-0">
+                        <div>
+                            <p class="font-medium">{{ item.menu_item.name }}</p>
+                            <p class="text-sm text-gray-600">{{ item.size.get_size_display }} × {{ item.quantity }}</p>
+                        </div>
+                        <span class="font-medium">{{ item.get_total }} VND</span>
                     </div>
-                    <a href="{% url 'remove-voucher' %}" class="text-danger" title="Remove voucher">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </div>
-            </div>
-            {% else %}
-            <div class="voucher-box mb-3">
-                <h6 class="mb-2">Have a voucher?</h6>
-                <form method="POST" action="{% url 'apply-voucher' %}" class="voucher-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="checkout">
-                    <div class="input-group">
-                        <input type="text" name="code" class="form-control" placeholder="Enter voucher code">
-                        <button type="submit" class="btn btn-primary">Apply</button>
-                    </div>
-                    {% if messages %}
-                        {% for message in messages %}
-                            {% if 'voucher' in message.tags %}
-                                <div class="{% if message.tags %}{{ message.tags }}{% endif %}">
-                                    {{ message }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                </form>
-            </div>
-            {% endif %}
-
-            <!-- Order Summary Card -->
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Order Summary</h4>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <tbody>
-                                {% for item in cart_items %}
-                                <tr>
-                                    <td>{{ item.menu_item.name }} ({{ item.size.get_size_display }}) × {{ item.quantity }}</td>
-                                    <td class="text-end">{{ item.get_total }} VND</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Subtotal:</th>
-                                    <th class="text-end">{{ subtotal }} VND</th>
-                                </tr>
-                                {% if discount %}
-                                <tr class="text-success">
-                                    <td>
-                                        Discount:
-                                    </td>
-                                    <td class="text-end">-{{ discount }} VND</td>
-                                </tr>
-                                {% endif %}
-                                <tr class="fw-bold">
-                                    <th>Total:</th>
-                                    <th class="text-end">{{ total }} VND</th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    {% endfor %}
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>Total:</span>
+                            <span>{{ total }} VND</span>
+                        </div>
                     </div>
                 </div>
             </div>

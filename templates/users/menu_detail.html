@@ -2,250 +2,157 @@
 
 {% load humanize %}
 
-{% block extra_head %}
-<style>
-    .size-selector {
-        margin: 1.5rem 0;
-    }
-    
-    .btn-group {
-        width: 100%;
-        gap: 0.5rem;
-    }
-    
-    .btn-check + .btn {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .price-range {
-        font-size: 1.1rem;
-        color: #28a745;
-        font-weight: 600;
-        margin: 0.5rem 0;
-    }
-
-    .product-image {
-        /* width: 30%;  Removed fixed width */
-        height: 300px; /* Reduced from 400px, adjust as needed */
-        object-fit: cover;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .product-image:hover {
-        transform: scale(0.5);
-    }
-
-    .related-item-image {
-        height: 150px; /* Reduced from 200px */
-        object-fit: cover;
-        border-radius: 4px;
-        transition: transform 0.3s ease;
-    }
-
-    .related-item-image:hover {
-        transform: scale(1.05);
-    }
-
-    .product-info {
-        padding: 20px;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .description-text {
-        line-height: 1.6;
-        color: #6c757d;
-        margin-bottom: 2rem;
-        max-height: 100px;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-    }
-
-    .description-text.expanded {
-        max-height: 1000px;
-    }
-
-    .description-toggle {
-        color: #0d6efd;
-        cursor: pointer;
-        user-select: none;
-        margin-bottom: 1rem;
-    }
-
-    .description-toggle:hover {
-        text-decoration: underline;
-    }
-
-    .category-badge {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
-        background-color: #f8f9fa;
-        border-radius: 20px;
-        color: #6c757d;
-        margin-bottom: 1rem;
-        display: inline-block;
-        transition: background-color 0.3s ease;
-    }
-
-    .category-badge:hover {
-        background-color: #e9ecef;
-    }
-
-    .price-tag {
-        font-size: 2rem;
-        color: #28a745;
-        font-weight: bold;
-        margin: 1rem 0;
-    }
-
-    .related-items {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #eee;
-    }
-
-    .related-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .related-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container py-4">
-    <section class="product-detail-section mb-5"> <!-- Added section here -->
+<div class="container mx-auto px-4 py-8">
     <!-- Main Product Section -->
-    <div class="row">
-        <div class="col-md-6"> <!-- Increased column size for image -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <!-- Product Image -->
+        <div class="relative">
             {% if item.image %}
-            <img src="{{ item.get_image_url }}" class="card-img-top" alt="{{ item.name }}">
+            <div class="relative h-[400px] rounded-lg overflow-hidden shadow-lg">
+                <img src="{{ item.get_image_url }}" 
+                     class="w-full h-full object-cover transform transition-transform duration-300 hover:scale-105" 
+                     alt="{{ item.name }}">
+            </div>
             {% endif %}
         </div>
-        <div class="col-md-6"> <!-- Increased column size for product info to match -->
-            <div class="product-info">
-                <span class="category-badge">{{ item.category }}</span>
-                <h1 class="mb-3">{{ item.name }}</h1>
 
-                <div class="description-text" id="description">
+        <!-- Product Info -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <span class="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm mb-4">
+                {{ item.category }}
+            </span>
+            <h1 class="text-3xl font-bold mb-4">{{ item.name }}</h1>
+
+            <div class="prose max-w-none mb-6">
+                <div id="description" class="line-clamp-4 transition-all duration-300">
                     {{ item.description }}
                 </div>
-                <div class="description-toggle" onclick="toggleDescription()">
+                <button onclick="toggleDescription()" 
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 flex items-center">
                     <span id="toggle-text">Show More</span>
-                    <i class="fas fa-chevron-down" id="toggle-icon"></i>
-                </div>
-
-                <div class="size-selector mb-3">
-                    <label class="form-label">Select Size:</label>
-                    <div class="btn-group" role="group">
-                        {% for size in item.sizes.all|dictsort:"size" %}
-                            {% if size.is_available %}
-                            <input type="radio" class="btn-check" name="size" id="size-{{ size.size }}" 
-                                   value="{{ size.id }}" {% if forloop.first %}checked{% endif %}
-                                   data-price="{{ size.price }}">
-                            <label class="btn btn-outline-primary" for="size-{{ size.size }}">
-                                {{ size.get_size_display }} - {{ size.price }} VND
-                            </label>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="price-range">
-                    {% with min_price=item.sizes.all|dictsort:"price"|first %}
-                    {% with max_price=item.sizes.all|dictsort:"price"|last %}
-                        {% if min_price.price != max_price.price %}
-                        <p class="price-tag">{{ min_price.price }} - {{ max_price.price }} VND</p>
-                        {% else %}
-                        <p class="price-tag">{{ min_price.price }} VND</p>
-                        {% endif %}
-                    {% endwith %}
-                    {% endwith %}
-                </div>
-
-                {% if item.is_available %}
-                    <span class="badge bg-success availability-badge" style="margin-bottom: 1rem;">Available</span>
-                    {% if user.is_authenticated %}
-                        <form method="POST" action="{% url 'cart-add' item.id %}" class="d-grid gap-2">
-                            {% csrf_token %}
-                            <input type="hidden" name="size" id="selected-size">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-shopping-cart"></i> Add to Cart
-                            </button>
-                            <a href="{% url 'cart-view' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-shopping-basket"></i> View Cart
-                            </a>
-                        </form>
-                    {% else %}
-                        <div class="d-grid gap-2">
-                            <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">
-                                <i class="fas fa-sign-in-alt"></i> Login to Order
-                            </a>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <span class="badge bg-danger availability-badge">Not Available</span>
-                {% endif %}
+                    <i class="fas fa-chevron-down ml-1" id="toggle-icon"></i>
+                </button>
             </div>
+
+            <!-- Size Selection -->
+            {% if item.is_available %}
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Size:</label>
+                <div class="grid grid-cols-2 gap-3">
+                    {% for size in item.sizes.all|dictsort:"size" %}
+                        {% if size.is_available %}
+                        <div class="relative">
+                            <input type="radio" 
+                                   class="peer sr-only" 
+                                   name="size" 
+                                   id="size-{{ size.size }}" 
+                                   value="{{ size.id }}" 
+                                   {% if forloop.first %}checked{% endif %}
+                                   data-price="{{ size.price }}">
+                            <label class="block w-full p-3 text-center border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-blue-300 transition-all duration-200" 
+                                   for="size-{{ size.size }}">
+                                <span class="block font-medium">{{ size.get_size_display }}</span>
+                                <span class="block text-sm text-green-600">{{ size.price }} VND</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Price Range -->
+            <div class="mb-6">
+                {% with min_price=item.sizes.all|dictsort:"price"|first %}
+                {% with max_price=item.sizes.all|dictsort:"price"|last %}
+                    {% if min_price.price != max_price.price %}
+                    <p class="text-2xl font-bold text-green-600">{{ min_price.price }} - {{ max_price.price }} VND</p>
+                    {% else %}
+                    <p class="text-2xl font-bold text-green-600">{{ min_price.price }} VND</p>
+                    {% endif %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            <!-- Action Buttons -->
+            {% if item.is_available %}
+                <span class="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm mb-4">
+                    Available
+                </span>
+                {% if user.is_authenticated %}
+                    <form method="POST" action="{% url 'cart-add' item.id %}" class="space-y-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="size" id="selected-size">
+                        <button type="submit" 
+                                class="w-full flex justify-center items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
+                            <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
+                        </button>
+                        <a href="{% url 'cart-view' %}" 
+                           class="w-full flex justify-center items-center px-6 py-3 border-2 border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition-all duration-200">
+                            <i class="fas fa-shopping-basket mr-2"></i> View Cart
+                        </a>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" 
+                       class="w-full flex justify-center items-center px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Login to Order
+                    </a>
+                {% endif %}
+            {% else %}
+                <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm mb-4">
+                    Not Available
+                </span>
+            {% endif %}
         </div>
     </div>
-    </section> <!-- End of section -->
 
     <!-- Related Items Section -->
     {% if related_items %}
-    <section class="related-items">
-        <h2 class="mb-4">More from {{ item.category }}</h2>
-        <div class="row">
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold mb-6">More from {{ item.category }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for related_item in related_items %}
             {% if related_item.id != item.id %}
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card h-100 related-card">
-                    {% if related_item.image %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                {% if related_item.image %}
+                <div class="relative h-48 overflow-hidden">
                     <img src="{{ related_item.image.url }}"
-                         class="card-img-top related-item-image"
+                         class="w-full h-full object-cover transform transition-transform duration-300 hover:scale-105"
                          alt="{{ related_item.name }}">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title text-truncate">{{ related_item.name }}</h5>
-                        <div class="price-range">
-                            {% with min_price=related_item.sizes.all|dictsort:"price"|first %}
-                            {% with max_price=related_item.sizes.all|dictsort:"price"|last %}
-                                {% if min_price.price != max_price.price %}
-                                    {{ min_price.price }} - {{ max_price.price }} VND
-                                {% else %}
-                                    {{ min_price.price }} VND
-                                {% endif %}
-                            {% endwith %}
-                            {% endwith %}
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'menu-detail' related_item.id %}"
-                               class="btn btn-sm btn-outline-primary">
-                               <i class="fas fa-eye"></i> View
-                            </a>
-                            {% if user.is_authenticated and related_item.is_available %}
-                            <a href="{% url 'cart-add' related_item.id %}"
-                               class="btn btn-sm btn-success">
-                               <i class="fas fa-cart-plus"></i> Add
-                            </a>
+                </div>
+                {% endif %}
+                <div class="p-4">
+                    <h5 class="text-lg font-semibold mb-2 truncate">{{ related_item.name }}</h5>
+                    <div class="text-green-600 font-medium mb-4">
+                        {% with min_price=related_item.sizes.all|dictsort:"price"|first %}
+                        {% with max_price=related_item.sizes.all|dictsort:"price"|last %}
+                            {% if min_price.price != max_price.price %}
+                                {{ min_price.price }} - {{ max_price.price }} VND
+                            {% else %}
+                                {{ min_price.price }} VND
                             {% endif %}
-                        </div>
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <a href="{% url 'menu-detail' related_item.id %}"
+                           class="inline-flex items-center px-4 py-2 border-2 border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition-all duration-200">
+                            <i class="fas fa-eye mr-2"></i> View
+                        </a>
+                        {% if user.is_authenticated and related_item.is_available %}
+                        <a href="{% url 'cart-add' related_item.id %}"
+                           class="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
+                            <i class="fas fa-cart-plus mr-2"></i> Add
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             {% endif %}
             {% endfor %}
         </div>
-    </section>
+    </div>
     {% endif %}
 </div>
 
@@ -254,7 +161,7 @@
 document.querySelectorAll('input[name="size"]').forEach(input => {
     input.addEventListener('change', function() {
         const price = this.dataset.price;
-        document.querySelector('.price-tag').textContent = `${price} VND`;
+        document.querySelector('.text-2xl').textContent = `${price} VND`;
         document.getElementById('selected-size').value = this.value;
     });
 });
@@ -271,9 +178,10 @@ function toggleDescription() {
     const toggleText = document.getElementById('toggle-text');
     const toggleIcon = document.getElementById('toggle-icon');
 
-    description.classList.toggle('expanded');
+    description.classList.toggle('line-clamp-4');
+    description.classList.toggle('line-clamp-none');
 
-    if (description.classList.contains('expanded')) {
+    if (description.classList.contains('line-clamp-none')) {
         toggleText.textContent = 'Show Less';
         toggleIcon.classList.replace('fa-chevron-down', 'fa-chevron-up');
     } else {

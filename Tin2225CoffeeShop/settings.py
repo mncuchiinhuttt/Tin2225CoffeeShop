@@ -44,7 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.humanize',
     'users',
+    'tailwind',
+    'theme',
+    'django_browser_reload'
 ]
+
+TAILWIND_APP_NAME = 'theme'
+NPM_BIN_PATH = '/usr/local/bin/npm'
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
@@ -63,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware'
 ]
 
 ROOT_URLCONF = 'Tin2225CoffeeShop.urls'
@@ -133,6 +140,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

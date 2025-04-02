@@ -1,12 +1,5 @@
 from django.contrib import admin
-from .models import MenuItem, Order, OrderItem, CartItem, Size, Voucher
-
-@admin.register(Voucher)
-class VoucherAdmin(admin.ModelAdmin):
-    list_display = ('code', 'discount_amount', 'valid_from', 'valid_to', 
-                   'is_active', 'times_used')
-    search_fields = ('code',)
-    list_filter = ('is_active', 'valid_from', 'valid_to')
+from .models import MenuItem, Order, OrderItem, CartItem, Size
 
 @admin.register(Size)
 class SizeAdmin(admin.ModelAdmin):
@@ -41,11 +34,16 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemInline]
     
     def get_readonly_fields(self, request, obj=None):
-        if obj:  # editing an existing object
+        if obj:
             return self.readonly_fields + ('user', 'total_amount')
         return self.readonly_fields
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
-    list_display = ('user', 'menu_item', 'quantity', 'date_added')
-    list_filter = ('user', 'date_added')
+    list_display = ('user', 'menu_item', 'quantity', 'created_at')
+    list_filter = ('user', 'created_at')
+    search_fields = ('user__username', 'menu_item__name')
+    readonly_fields = ('created_at', 'updated_at')
+
+    def has_add_permission(self, request):
+        return False

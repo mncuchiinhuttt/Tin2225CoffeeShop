@@ -1,138 +1,154 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">Order History</h2>
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold mb-8">Order History</h2>
     
     <!-- Filter Form -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">All Status</option>
-                        {% for status_code, status_name in status_choices %}
-                        <option value="{{ status_code }}" {% if status_code == current_status %}selected{% endif %}>
-                            {{ status_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="date_from" class="form-label">Date From</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
-                </div>
-                <div class="col-md-3">
-                    <label for="date_to" class="form-label">Date To</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
-                </div>
-                <div class="col-md-3">
-                    <label for="search" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" 
-                           placeholder="Order ID, Address, Phone">
-                </div>
-                <div class="col-md-3">
-                    <label for="sort_by" class="form-label">Sort By</label>
-                    <select name="sort_by" id="sort_by" class="form-select">
-                        <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
-                        <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
-                        <option value="total_amount" {% if current_sort == 'total_amount' %}selected{% endif %}>Price (Low to High)</option>
-                        <option value="-total_amount" {% if current_sort == '-total_amount' %}selected{% endif %}>Price (High to Low)</option>
-                        <option value="status" {% if current_sort == 'status' %}selected{% endif %}>Status</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    <a href="{% url 'order-history' %}" class="btn btn-outline-secondary">Clear Filters</a>
-                </div>
-            </form>
-        </div>
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" id="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Status</option>
+                    {% for status_code, status_name in status_choices %}
+                    <option value="{{ status_code }}" {% if status_code == current_status %}selected{% endif %}>
+                        {{ status_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                       id="date_from" name="date_from" value="{{ date_from }}">
+            </div>
+            <div>
+                <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                       id="date_to" name="date_to" value="{{ date_to }}">
+            </div>
+            <div>
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                       id="search" name="search" value="{{ search }}" placeholder="Order ID, Address, Phone">
+            </div>
+            <div>
+                <label for="sort_by" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                <select name="sort_by" id="sort_by" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                    <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                    <option value="total_amount" {% if current_sort == 'total_amount' %}selected{% endif %}>Price (Low to High)</option>
+                    <option value="-total_amount" {% if current_sort == '-total_amount' %}selected{% endif %}>Price (High to Low)</option>
+                    <option value="status" {% if current_sort == 'status' %}selected{% endif %}>Status</option>
+                </select>
+            </div>
+            <div class="flex items-end space-x-4">
+                <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
+                    Apply Filters
+                </button>
+                <a href="{% url 'order-history' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200">
+                    Clear Filters
+                </a>
+            </div>
+        </form>
     </div>
     
     {% if orders %}
         {% for order in orders %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title">Order #{{ order.id }}</h5>
-                    <span class="badge bg-{% if order.status == 'DELIVERED' %}success{% elif order.status == 'CANCELLED' %}danger{% else %}primary{% endif %}">
-                        {{ order.get_status_display }}
-                    </span>
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-start mb-4">
+                <h5 class="text-xl font-semibold">Order #{{ order.id }}</h5>
+                <span class="px-4 py-2 rounded-full text-sm font-medium
+                    {% if order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                    {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800
+                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">
+                Ordered on: {{ order.created_at|date:"F j, Y, g:i a" }}
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <p class="mb-2"><span class="font-medium">Total Amount:</span> {{ order.total_amount }} VND</p>
                 </div>
-                <p class="card-text">
-                    <small class="text-muted">Ordered on: {{ order.created_at|date:"F j, Y, g:i a" }}</small>
-                </p>
-                <div class="col-md-6">
-                    <p><strong>Total Amount:</strong> {{ order.total_amount }} VND</p>
-                    {% if order.voucher %}
-                    <p>
-                        <strong>Voucher Applied:</strong> 
-                        <span class="text-success">{{ order.voucher.code }}</span>
-                        (Discount: {{ order.discount }} VND)
-                    </p>
-                    <p><strong>Subtotal:</strong> {{ order.subtotal }} VND</p>
-                    {% endif %}
+                <div>
+                    <p class="mb-2"><span class="font-medium">Delivery Address:</span> {{ order.delivery_address }}</p>
+                    <p class="mb-2"><span class="font-medium">Phone Number:</span> {{ order.phone_number }}</p>
                 </div>
-                <div class="col-md-6">
-                    <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
-                    <p><strong>Phone Number:</strong> {{ order.phone_number }}</p>
-                </div>
-                
-                <h6 class="mt-3">Order Items:</h6>
-                <ul class="list-group">
+            </div>
+            
+            <div class="border-t pt-4">
+                <h6 class="text-lg font-semibold mb-3">Order Items:</h6>
+                <div class="space-y-2">
                     {% for item in order.orderitem_set.all %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ item.menu_item.name }} ({{ item.size }})
-                        <span>
+                    <div class="flex justify-between items-center py-2 border-b last:border-0">
+                        <span>{{ item.menu_item.name }} ({{ item.size }})</span>
+                        <span class="font-medium">
                             {{ item.quantity }} × {{ item.price }} VND = {{ item.get_total }} VND
                         </span>
-                    </li>
+                    </div>
                     {% endfor %}
-                </ul>
+                </div>
             </div>
         </div>
         {% endfor %}
         
         <!-- Pagination -->
         {% if orders.paginator.num_pages > 1 %}
-        <nav aria-label="Page navigation" class="mt-4">
-            <ul class="pagination justify-content-center">
+        <div class="flex justify-center mt-8">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                 {% if orders.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">&laquo; First</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Previous</a>
-                    </li>
+                    <a href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">First</span>
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-angle-left"></i>
+                    </a>
                 {% endif %}
 
                 {% for num in orders.paginator.page_range %}
                     {% if orders.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
+                        <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                            {{ num }}
+                        </span>
                     {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ num }}</a>
-                        </li>
+                        <a href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </a>
                     {% endif %}
                 {% endfor %}
 
                 {% if orders.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Next</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Last &raquo;</a>
-                    </li>
+                    <a href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ orders.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Last</span>
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
                 {% endif %}
-            </ul>
-        </nav>
+            </nav>
+        </div>
         {% endif %}
     {% else %}
-        <p>You haven't placed any orders yet.</p>
-        <a href="{% url 'menu-list' %}" class="btn btn-primary">Browse Menu</a>
+        <div class="text-center py-12">
+            <i class="fas fa-shopping-bag text-6xl text-gray-400 mb-4"></i>
+            <p class="text-xl text-gray-600 mb-6">You haven't placed any orders yet.</p>
+            <a href="{% url 'menu-list' %}" 
+               class="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
+                <i class="fas fa-coffee mr-2"></i>Browse Menu
+            </a>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

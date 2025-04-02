@@ -1,87 +1,47 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <!-- Hero Section -->
-    <div class="py-5 text-center bg-light rounded mb-5">
-        <h1 class="display-4">Welcome to Tin2225 Coffee Shop</h1>
-        <p class="lead">Experience the finest coffee and delicious treats</p>
+<div class="container mx-auto px-4">
+    <div class="py-12 text-center bg-gray-100 rounded-lg mb-8">
+        <h1 class="text-4xl font-bold mb-4">Welcome to Tin2225 Coffee Shop</h1>
+        <p class="text-xl text-gray-600 mb-6">Experience the finest coffee and delicious treats</p>
         {% if user.is_authenticated %}
-            <p>Hello, {{ user.username }}!</p>
-            <a href="{% url 'menu-list' %}" class="btn btn-primary btn-lg" style="margin-top: 1rem;">Browse Menu</a>
+            <p class="text-lg mb-4">Hello, {{ user.username }}!</p>
+            <a href="{% url 'menu-list' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">Browse Menu</a>
         {% else %}
-            <div class="mt-4">
-                <a href="{% url 'login' %}" class="btn btn-primary btn-lg mx-2">Login</a>
-                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg mx-2">Register</a>
+            <div class="mt-6 space-x-4">
+                <a href="{% url 'login' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">Login</a>
+                <a href="{% url 'register' %}" class="inline-block border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors">Register</a>
             </div>
         {% endif %}
     </div>
 
-    <!-- Hot Items Section -->
-    {% if hot_items %}
-    <section class="mb-5">
-        <h2 class="mb-4">Most Popular Items</h2>
-        <div class="row">
-            {% for item in hot_items %}
-            <div class="col-md-3 mb-4">
-                <div class="card h-100">
-                    {% if item.image %}
-                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" 
-                         style="height: 200px; object-fit: cover;">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">{{ item.name }}</h5>
-                        <div class="price-range" style="margin-bottom:1rem;">
-                            {% with min_price=item.sizes.all|dictsort:"price"|first %}
-                            {% with max_price=item.sizes.all|dictsort:"price"|last %}
-                                {% if min_price.price != max_price.price %}
-                                    {{ min_price.price }} - {{ max_price.price }} VND
-                                {% else %}
-                                    {{ min_price.price }} VND
-                                {% endif %}
-                            {% endwith %}
-                            {% endwith %}
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'menu-detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-
     <!-- New Items Section -->
     {% if new_items %}
-    <section class="mb-5">
-        <h2 class="mb-4">New Arrivals</h2>
-        <div class="row">
+    <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-6">New Arrivals</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for item in new_items %}
-            <div class="col-md-3 mb-4">
-                <div class="card h-100">
-                    {% if item.image %}
-                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}"
-                         style="height: 200px; object-fit: cover;">
-                    {% endif %}
-                    <div class="card-body">
-                        <span class="badge bg-success mb-2">New</span>
-                        <h5 class="card-title">{{ item.name }}</h5>
-                        <div class="price-range" style="margin-bottom:1rem;">
-                            {% with min_price=item.sizes.all|dictsort:"price"|first %}
-                            {% with max_price=item.sizes.all|dictsort:"price"|last %}
-                                {% if min_price.price != max_price.price %}
-                                    {{ min_price.price }} - {{ max_price.price }} VND
-                                {% else %}
-                                    {{ min_price.price }} VND
-                                {% endif %}
-                            {% endwith %}
-                            {% endwith %}
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'menu-detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
-                        </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" class="w-full h-48 object-cover" alt="{{ item.name }}">
+                {% endif %}
+                <div class="p-4">
+                    <span class="inline-block bg-green-500 text-white text-xs px-2 py-1 rounded-full mb-2">New</span>
+                    <h5 class="text-lg font-semibold mb-2">{{ item.name }}</h5>
+                    <div class="text-gray-600 mb-4">
+                        {% with min_price=item.sizes.all|dictsort:"price"|first %}
+                        {% with max_price=item.sizes.all|dictsort:"price"|last %}
+                            {% if min_price.price != max_price.price %}
+                                {{ min_price.price }} - {{ max_price.price }} VND
+                            {% else %}
+                                {{ min_price.price }} VND
+                            {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <a href="{% url 'menu-detail' item.id %}" class="inline-block border-2 border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">View Details</a>
                     </div>
                 </div>
             </div>
@@ -92,19 +52,15 @@
 
     <!-- Categories Section -->
     {% if featured_categories %}
-    <section class="mb-5">
-        <h2 class="mb-4">Browse Categories</h2>
-        <div class="row">
+    <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-6">Browse Categories</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for category in featured_categories %}
-            <div class="col-md-3 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ category.category }}</h5>
-                        <p class="card-text" style="margin-bottom: 1rem;">{{ category.item_count }} items</p>
-                        <a href="{% url 'menu-list' %}?category={{ category.category }}" 
-                           class="btn btn-outline-primary">Browse</a>
-                    </div>
-                </div>
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <h5 class="text-lg font-semibold mb-2">{{ category.name }}</h5>
+                <p class="text-gray-600 mb-4">{{ category.item_count }} items</p>
+                <a href="{% url 'menu-list' %}?category={{ category.id }}" 
+                   class="inline-block border-2 border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">Browse</a>
             </div>
             {% endfor %}
         </div>
@@ -112,24 +68,22 @@
     {% endif %}
 
     <!-- About Section -->
-    <section class="py-5 bg-light rounded">
-        <div class="row">
-            <div class="col-md-6 offset-md-3 text-center">
-                <h2 class="mb-4">About Our Coffee Shop</h2>
-                <p class="lead">We pride ourselves on serving the finest coffee and providing exceptional service to our customers.</p>
-                <div class="row mt-4">
-                    <div class="col-4">
-                        <h3 class="h5">Quality</h3>
-                        <p>Premium coffee beans</p>
-                    </div>
-                    <div class="col-4">
-                        <h3 class="h5">Service</h3>
-                        <p>Fast delivery</p>
-                    </div>
-                    <div class="col-4">
-                        <h3 class="h5">Value</h3>
-                        <p>Best prices</p>
-                    </div>
+    <section class="py-12 bg-gray-100 rounded-lg">
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-2xl font-bold mb-6">About Our Coffee Shop</h2>
+            <p class="text-xl text-gray-600 mb-8">We pride ourselves on serving the finest coffee and providing exceptional service to our customers.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Quality</h3>
+                    <p class="text-gray-600">Premium coffee beans</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Service</h3>
+                    <p class="text-gray-600">Fast delivery</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Value</h3>
+                    <p class="text-gray-600">Best prices</p>
                 </div>
             </div>
         </div>

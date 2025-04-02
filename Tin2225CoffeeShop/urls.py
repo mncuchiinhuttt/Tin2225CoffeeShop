@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, reverse_lazy
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from users import views as user_views
@@ -21,10 +21,12 @@ urlpatterns = [
     path('cart/remove/<int:item_id>/', user_views.cart_remove, name='cart-remove'),
     path('checkout/', user_views.checkout, name='checkout'),
     path('orders/', user_views.order_history, name='order-history'),
-    path('cart/update/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
-    path('apply-voucher/', user_views.apply_voucher, name='apply-voucher'),
-    path('remove-voucher/', user_views.remove_voucher, name='remove-voucher'),
-    path('cart/update-quantity/<int:item_id>/', user_views.update_cart_quantity, name='cart-update-quantity'),
+    path('cart/update-quantity/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
+    path('__reload__/', include('django_browser_reload.urls')),
+    path('terms/', user_views.terms, name='terms'),
+    path('privacy/', user_views.privacy, name='privacy'),
+    path('forgot-password/', user_views.forgot_password, name='forgot-password'),
+    path('about/', user_views.about, name='about'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
