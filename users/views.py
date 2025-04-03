@@ -3,14 +3,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from .forms import UserRegistrationForm
-from .models import MenuItem, CartItem, Order, OrderItem, Size, Category, Comment
+from .models import MenuItem, CartItem, Order, OrderItem, Size, Category, Comment, ShippingAddress
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta, datetime
-from .forms import CommentForm
+from .forms import CommentForm, ShippingAddressForm
 import json
 from decimal import Decimal
 
@@ -110,7 +110,25 @@ def checkout(request):
     
     points_to_earn = int((final_total / Decimal('1000')) * points_multiplier)
     
+    # Get user's shipping addresses
+    shipping_addresses = ShippingAddress.objects.filter(user=request.user)
+    
     if request.method == 'POST':
+        # Handle shipping address selection/creation
+        address_id = request.POST.get('address_id')
+        if address_id == 'new':
+            # Create new address
+            address = ShippingAddress.objects.create(
+                user=request.user,
+                full_name=request.POST['full_name'],
+                phone_number=request.POST['phone_number'],
+                address=request.POST['address'],
+                is_default=request.POST.get('is_default', False)
+            )
+        else:
+            # Use existing address
+            address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+        
         # Create order
         order = Order.objects.create(
             user=request.user,
@@ -118,8 +136,8 @@ def checkout(request):
             discount_amount=discount_amount,
             delivery_fee=delivery_fee,
             total_amount=final_total,
-            delivery_address=request.POST['delivery_address'],
-            phone_number=request.POST['phone_number'],
+            delivery_address=address.address,
+            phone_number=address.phone_number,
             membership_level=membership_level,
             points_earned=0  # Points will be set when order is delivered
         )
@@ -146,7 +164,8 @@ def checkout(request):
         'discount_amount': discount_amount,
         'delivery_fee': delivery_fee,
         'final_total': final_total,
-        'points_to_earn': points_to_earn
+        'points_to_earn': points_to_earn,
+        'shipping_addresses': shipping_addresses,
     }
     return render(request, 'users/checkout.html', context)
 
@@ -473,3 +492,55 @@ def order_detail(request, order_id):
         'order_items': order_items,
     }
     return render(request, 'users/order_detail.html', context)
+
+@login_required
+def shipping_addresses(request):
+    addresses = ShippingAddress.objects.filter(user=request.user)
+    context = {
+        'addresses': addresses,
+    }
+    return render(request, 'users/shipping_addresses.html', context)
+
+@login_required
+def add_shipping_address(request):
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+            messages.success(request, 'Shipping address added successfully.')
+            return redirect('shipping-addresses')
+    else:
+        form = ShippingAddressForm()
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'users/add_shipping_address.html', context)
+
+@login_required
+def edit_shipping_address(request, address_id):
+    address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Shipping address updated successfully.')
+            return redirect('shipping-addresses')
+    else:
+        form = ShippingAddressForm(instance=address)
+    
+    context = {
+        'form': form,
+        'address': address,
+    }
+    return render(request, 'users/edit_shipping_address.html', context)
+
+@login_required
+def delete_shipping_address(request, address_id):
+    address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, 'Shipping address deleted successfully.')
+    return redirect('shipping-addresses')

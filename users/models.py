@@ -232,3 +232,25 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+class ShippingAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shipping_addresses')
+    full_name = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=20)
+    address = models.TextField()
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'Shipping Addresses'
+        ordering = ['-is_default', '-created_at']
+
+    def __str__(self):
+        return f"{self.full_name} - {self.address[:50]}"
+
+    def save(self, *args, **kwargs):
+        # If this address is set as default, unset all other default addresses for this user
+        if self.is_default:
+            ShippingAddress.objects.filter(user=self.user, is_default=True).exclude(id=self.id).update(is_default=False)
+        super().save(*args, **kwargs)

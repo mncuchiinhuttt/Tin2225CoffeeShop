@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">My Shipping Addresses</h1>
+        <a href="{% url 'add-shipping-address' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Add New Address
+        </a>
+    </div>
+
+    {% if addresses %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for address in addresses %}
+                <div class="border rounded-lg p-6 {% if address.is_default %}border-blue-500 bg-blue-50{% endif %}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-semibold">{{ address.full_name }}</h3>
+                            <p class="text-gray-600">{{ address.phone_number }}</p>
+                        </div>
+                        {% if address.is_default %}
+                            <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded">Default</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-700 mb-4">{{ address.address }}</p>
+                    <div class="flex space-x-2">
+                        <a href="{% url 'edit-shipping-address' address.id %}" class="text-blue-500 hover:text-blue-700">
+                            Edit
+                        </a>
+                        <form method="post" action="{% url 'delete-shipping-address' address.id %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:text-red-700" onclick="return confirm('Are you sure you want to delete this address?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <p class="text-gray-600 mb-4">You haven't added any shipping addresses yet.</p>
+            <a href="{% url 'add-shipping-address' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Add Your First Address
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

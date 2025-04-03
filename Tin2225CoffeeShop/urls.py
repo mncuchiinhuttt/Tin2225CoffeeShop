@@ -37,6 +37,10 @@ urlpatterns = [
     path('staff/orders/', user_views.staff_orders, name='staff-orders'),
     path('staff/orders/<int:order_id>/update-status/', user_views.update_order_status, name='update-order-status'),
     path('staff/orders/<int:order_id>/', user_views.order_detail, name='order-detail'),
+    path('shipping-addresses/', user_views.shipping_addresses, name='shipping-addresses'),
+    path('shipping-addresses/add/', user_views.add_shipping_address, name='add-shipping-address'),
+    path('shipping-addresses/<int:address_id>/edit/', user_views.edit_shipping_address, name='edit-shipping-address'),
+    path('shipping-addresses/<int:address_id>/delete/', user_views.delete_shipping_address, name='delete-shipping-address'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">{% if address %}Edit{% else %}Add{% endif %} Shipping Address</h1>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            <div>
+                <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                {{ form.phone_number }}
+                {% if form.phone_number.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700">Address</label>
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="flex items-center">
+                {{ form.is_default }}
+                <label for="{{ form.is_default.id_for_label }}" class="ml-2 text-sm text-gray-700">Set as default address</label>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    {% if address %}Update{% else %}Add{% endif %} Address
+                </button>
+                <a href="{% url 'shipping-addresses' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 
