@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold mb-6">My Profile</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4">Membership Status</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-4xl">
+                            {% if profile.membership_level == 'DIAMOND' %}
+                                <i class="fas fa-gem text-blue-500"></i>
+                            {% elif profile.membership_level == 'PLATINUM' %}
+                                <i class="fas fa-crown text-gray-400"></i>
+                            {% elif profile.membership_level == 'GOLD' %}
+                                <i class="fas fa-medal text-yellow-500"></i>
+                            {% elif profile.membership_level == 'SILVER' %}
+                                <i class="fas fa-medal text-gray-300"></i>
+                            {% else %}
+                                <i class="fas fa-medal text-amber-700"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold">{{ profile.get_membership_level_display }}</p>
+                            <p class="text-gray-600">{{ profile.points }} points</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4">Points Progress</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span>Current Points</span>
+                            <span>{{ profile.points }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-600 h-2.5 rounded-full" 
+                                 style="width: {% widthratio profile.points 10000 100 %}%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>Next Level: {{ profile.get_next_level_points }} points</span>
+                            <span>Diamond: 10000 points</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Order History</h2>
+            {% if orders %}
+                <div class="space-y-4">
+                    {% for order in orders %}
+                    <div class="border rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold">Order #{{ order.id }}</p>
+                                <p class="text-gray-600">{{ order.created_date|date:"F j, Y" }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">{{ order.total_amount }} VND</p>
+                                {% if order.points_earned %}
+                                <p class="text-green-600">+{{ order.points_earned }} points</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="px-3 py-1 rounded-full text-sm 
+                                {% if order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                                {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600">No orders yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

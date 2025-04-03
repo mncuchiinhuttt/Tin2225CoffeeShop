@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, MenuItem, Order, OrderItem, CartItem, Size
+from .models import Category, MenuItem, Order, OrderItem, CartItem, Size, UserProfile
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -85,3 +85,9 @@ class CartItemAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'points', 'membership_level', 'total_spent')
+    search_fields = ('user__username', 'membership_level')
+    list_filter = ('membership_level',)

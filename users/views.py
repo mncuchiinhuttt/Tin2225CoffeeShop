@@ -282,3 +282,14 @@ def delete_comment(request, comment_id):
     comment.delete()
     messages.success(request, 'Comment deleted successfully!')
     return redirect('menu-detail', pk=menu_item_id)
+
+@login_required
+def profile(request):
+    user_profile = request.user.profile
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'profile': user_profile,
+        'orders': orders,
+    }
+    return render(request, 'users/profile.html', context)

@@ -30,6 +30,7 @@ urlpatterns = [
     path('menu/<int:menu_item_id>/comment/', user_views.add_comment, name='add_comment'),
     path('comment/<int:comment_id>/edit/', user_views.edit_comment, name='edit_comment'),
     path('comment/<int:comment_id>/delete/', user_views.delete_comment, name='delete_comment'),
+    path('profile/', user_views.profile, name='profile'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
