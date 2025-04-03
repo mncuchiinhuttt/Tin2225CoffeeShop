@@ -71,11 +71,59 @@
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                    <p class="mb-2"><span class="font-medium">Total Amount:</span> {{ order.total_amount }} VND</p>
+                    <div class="space-y-2">
+                        <p class="flex justify-between">
+                            <span class="text-gray-600">Subtotal:</span>
+                            <span>{{ order.subtotal }} VND</span>
+                        </p>
+                        {% if order.discount_amount > 0 %}
+                        <p class="flex justify-between text-green-600">
+                            <span>{{ order.membership_level }} Member Discount ({{ order.get_discount_percentage }}%):</span>
+                            <span>-{{ order.discount_amount }} VND</span>
+                        </p>
+                        {% endif %}
+                        {% if order.membership_level == 'PLATINUM' or order.membership_level == 'DIAMOND' %}
+                        <p class="flex justify-between text-green-600">
+                            <span>Free Delivery:</span>
+                            <span>-{{ order.delivery_fee }} VND</span>
+                        </p>
+                        {% else %}
+                        <p class="flex justify-between">
+                            <span class="text-gray-600">Delivery Fee:</span>
+                            <span>{{ order.delivery_fee }} VND</span>
+                        </p>
+                        {% endif %}
+                        <p class="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total:</span>
+                            <span>{{ order.total_amount }} VND</span>
+                        </p>
+                        {% if order.points_earned %}
+                        <p class="flex items-center text-sm text-green-600 mt-2">
+                            <i class="fas fa-coins mr-2"></i>
+                            Earned {{ order.points_earned }} points
+                        </p>
+                        {% endif %}
+                    </div>
                 </div>
                 <div>
                     <p class="mb-2"><span class="font-medium">Delivery Address:</span> {{ order.delivery_address }}</p>
                     <p class="mb-2"><span class="font-medium">Phone Number:</span> {{ order.phone_number }}</p>
+                    <p class="mb-2">
+                        <span class="font-medium">Membership Level:</span>
+                        <span class="inline-flex items-center">
+                            {% if order.membership_level == 'BRONZE' %}
+                                <span class="text-yellow-700">🥉 Bronze</span>
+                            {% elif order.membership_level == 'SILVER' %}
+                                <span class="text-gray-600">🥈 Silver</span>
+                            {% elif order.membership_level == 'GOLD' %}
+                                <span class="text-yellow-500">🥇 Gold</span>
+                            {% elif order.membership_level == 'PLATINUM' %}
+                                <span class="text-purple-600">💎 Platinum</span>
+                            {% elif order.membership_level == 'DIAMOND' %}
+                                <span class="text-blue-600">👑 Diamond</span>
+                            {% endif %}
+                        </span>
+                    </p>
                 </div>
             </div>
             

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% load user_filters %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Membership Status Card -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Membership Status</h1>
+                <p class="text-gray-600">Welcome, {{ user.username }}!</p>
+            </div>
+            <div class="text-right">
+                <p class="text-lg font-semibold text-gray-700">Current Points</p>
+                <p class="text-3xl font-bold text-green-600">{{ current_points }}</p>
+            </div>
+        </div>
+
+        {% if next_level %}
+        <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Progress to {{ next_level }}</span>
+                <span>{{ points_needed }} points needed</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ progress_percentage }}%"></div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center text-green-600 font-medium mb-4">
+            You've reached the highest membership level!
+        </div>
+        {% endif %}
+
+        <!-- Current Benefits -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-4">Your Benefits</h2>
+            <div class="space-y-2">
+                {% if profile.membership_level == 'BRONZE' %}
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Basic member benefits</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Earn 1 point per 1000 VND</span>
+                    </div>
+                {% elif profile.membership_level == 'SILVER' %}
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>All Bronze benefits</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>5% discount on orders</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Earn 1.2 points per 1000 VND</span>
+                    </div>
+                {% elif profile.membership_level == 'GOLD' %}
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>All Silver benefits</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>10% discount on orders</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Earn 1.5 points per 1000 VND</span>
+                    </div>
+                {% elif profile.membership_level == 'PLATINUM' %}
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>All Gold benefits</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>15% discount on orders</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Earn 2 points per 1000 VND</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Free delivery on all orders</span>
+                    </div>
+                {% elif profile.membership_level == 'DIAMOND' %}
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>All Platinum benefits</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>20% discount on orders</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Earn 2.5 points per 1000 VND</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Exclusive access to special events</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        <span>Personal barista service</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Membership Levels -->
+    <h2 class="text-2xl font-bold mb-6">Membership Levels</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <!-- Bronze Level -->
+        <div class="bg-white rounded-lg shadow-lg p-6 {% if profile.membership_level == 'BRONZE' %}border-2 border-green-500{% endif %}">
+            <div class="flex items-center mb-4">
+                <span class="text-2xl mr-2">🥉</span>
+                <h3 class="text-xl font-semibold">Bronze</h3>
+            </div>
+            <p class="text-gray-600 mb-4">0 - 999 points</p>
+            <ul class="space-y-2">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Basic member benefits
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Earn 1 point per 1000 VND
+                </li>
+            </ul>
+        </div>
+
+        <!-- Silver Level -->
+        <div class="bg-white rounded-lg shadow-lg p-6 {% if profile.membership_level == 'SILVER' %}border-2 border-green-500{% endif %}">
+            <div class="flex items-center mb-4">
+                <span class="text-2xl mr-2">🥈</span>
+                <h3 class="text-xl font-semibold">Silver</h3>
+            </div>
+            <p class="text-gray-600 mb-4">1,000 - 1,999 points</p>
+            <ul class="space-y-2">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    All Bronze benefits
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    5% discount on orders
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Earn 1.2 points per 1000 VND
+                </li>
+            </ul>
+        </div>
+
+        <!-- Gold Level -->
+        <div class="bg-white rounded-lg shadow-lg p-6 {% if profile.membership_level == 'GOLD' %}border-2 border-green-500{% endif %}">
+            <div class="flex items-center mb-4">
+                <span class="text-2xl mr-2">🥇</span>
+                <h3 class="text-xl font-semibold">Gold</h3>
+            </div>
+            <p class="text-gray-600 mb-4">2,000 - 4,999 points</p>
+            <ul class="space-y-2">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    All Silver benefits
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    10% discount on orders
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Earn 1.5 points per 1000 VND
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Priority customer service
+                </li>
+            </ul>
+        </div>
+
+        <!-- Platinum Level -->
+        <div class="bg-white rounded-lg shadow-lg p-6 {% if profile.membership_level == 'PLATINUM' %}border-2 border-green-500{% endif %}">
+            <div class="flex items-center mb-4">
+                <span class="text-2xl mr-2">💎</span>
+                <h3 class="text-xl font-semibold">Platinum</h3>
+            </div>
+            <p class="text-gray-600 mb-4">5,000 - 9,999 points</p>
+            <ul class="space-y-2">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    All Gold benefits
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    15% discount on orders
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Earn 2 points per 1000 VND
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Free delivery on all orders
+                </li>
+            </ul>
+        </div>
+
+        <!-- Diamond Level -->
+        <div class="bg-white rounded-lg shadow-lg p-6 {% if profile.membership_level == 'DIAMOND' %}border-2 border-green-500{% endif %}">
+            <div class="flex items-center mb-4">
+                <span class="text-2xl mr-2">👑</span>
+                <h3 class="text-xl font-semibold">Diamond</h3>
+            </div>
+            <p class="text-gray-600 mb-4">10,000+ points</p>
+            <ul class="space-y-2">
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    All Platinum benefits
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    20% discount on orders
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Earn 2.5 points per 1000 VND
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Exclusive access to events
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Personal barista service
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %} 

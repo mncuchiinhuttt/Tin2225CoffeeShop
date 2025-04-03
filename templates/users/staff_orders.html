@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Order Management</h1>
+            <div class="flex space-x-4">
+                <select id="status-filter" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                </select>
+                <input type="date" id="date-filter" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in orders %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">#{{ order.id }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ order.user.username }}</div>
+                            <div class="text-sm text-gray-500">{{ order.user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ order.created_at|date:"M d, Y" }}</div>
+                            <div class="text-sm text-gray-500">{{ order.created_at|time:"H:i" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ order.total_amount }} VND</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <form method="POST" action="{% url 'update-order-status' order.id %}" class="status-form">
+                                {% csrf_token %}
+                                <select name="status" 
+                                        class="rounded-md text-sm 
+                                        {% if order.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                                        {% elif order.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                        {% elif order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                                        {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800{% endif %}">
+                                    <option value="PENDING" {% if order.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                    <option value="PROCESSING" {% if order.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                                    <option value="DELIVERED" {% if order.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                                    <option value="CANCELLED" {% if order.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="location.href='{% url 'order-detail' order.id %}'" 
+                                    class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No orders found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <div class="flex justify-center mt-6">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                {% if orders.has_previous %}
+                <a href="?page={{ orders.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                
+                {% for i in orders.paginator.page_range %}
+                <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium {% if orders.number == i %}text-blue-600 bg-blue-50{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+                    {{ i }}
+                </a>
+                {% endfor %}
+                
+                {% if orders.has_next %}
+                <a href="?page={{ orders.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.status-form select').forEach(select => {
+    select.addEventListener('change', function() {
+        if (this.value === 'DELIVERED') {
+            if (!confirm('Are you sure you want to mark this order as delivered? This will add points to the customer\'s account.')) {
+                this.value = this.dataset.originalValue;
+                return;
+            }
+        }
+        this.form.submit();
+    });
+    
+    select.dataset.originalValue = select.value;
+});
+
+document.getElementById('status-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('date-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+function applyFilters() {
+    const status = document.getElementById('status-filter').value;
+    const date = document.getElementById('date-filter').value;
+    let url = window.location.pathname + '?';
+    
+    if (status) url += `status=${status}&`;
+    if (date) url += `date=${date}&`;
+    
+    window.location.href = url.slice(0, -1);
+}
+</script>
+{% endblock %}
+{% endblock %} 

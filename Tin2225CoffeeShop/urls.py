@@ -19,8 +19,10 @@ urlpatterns = [
     path('cart/', user_views.cart_view, name='cart-view'),
     path('cart/add/<int:item_id>/', user_views.cart_add, name='cart-add'),
     path('cart/remove/<int:item_id>/', user_views.cart_remove, name='cart-remove'),
+    path('cart/update-quantity/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
     path('checkout/', user_views.checkout, name='checkout'),
     path('orders/', user_views.order_history, name='order-history'),
+    path('orders/<int:order_id>/update-status/', user_views.update_order_status, name='update-order-status'),
     path('cart/update-quantity/<int:item_id>/', user_views.cart_update_quantity, name='cart-update-quantity'),
     path('__reload__/', include('django_browser_reload.urls')),
     path('terms/', user_views.terms, name='terms'),
@@ -31,6 +33,10 @@ urlpatterns = [
     path('comment/<int:comment_id>/edit/', user_views.edit_comment, name='edit_comment'),
     path('comment/<int:comment_id>/delete/', user_views.delete_comment, name='delete_comment'),
     path('profile/', user_views.profile, name='profile'),
+    path('membership/', user_views.membership, name='membership'),
+    path('staff/orders/', user_views.staff_orders, name='staff-orders'),
+    path('staff/orders/<int:order_id>/update-status/', user_views.update_order_status, name='update-order-status'),
+    path('staff/orders/<int:order_id>/', user_views.order_detail, name='order-detail'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

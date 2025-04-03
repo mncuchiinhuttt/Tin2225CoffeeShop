@@ -74,23 +74,69 @@ class Order(models.Model):
         ('CANCELLED', 'Cancelled'),
     ]
 
+    MEMBERSHIP_LEVELS = [
+        ('BRONZE', 'Bronze'),
+        ('SILVER', 'Silver'),
+        ('GOLD', 'Gold'),
+        ('PLATINUM', 'Platinum'),
+        ('DIAMOND', 'Diamond'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     points_earned = models.IntegerField(default=0)
     points_used = models.IntegerField(default=0)
     delivery_address = models.TextField()
     phone_number = models.CharField(max_length=20)
+    membership_level = models.CharField(max_length=10, choices=MEMBERSHIP_LEVELS, default='BRONZE')
 
     def save(self, *args, **kwargs):
-        if self.status == 'DELIVERED' and not self.points_earned:
-            self.points_earned = self.user.profile.add_points(self.total_amount)
+        """Save order and handle points calculation"""
+        # Check if this is a new delivery completion
+        is_newly_delivered = (
+            self.pk is not None and  # Not a new order
+            self.status == 'DELIVERED' and  # Status is delivered
+            Order.objects.get(pk=self.pk).status != 'DELIVERED'  # Previous status wasn't delivered
+        )
+        
+        # Calculate points only when order is newly marked as delivered
+        if is_newly_delivered and not self.points_earned:
+            # Get points multiplier based on membership level
+            points_multiplier = {
+                'BRONZE': 1,
+                'SILVER': 1.2,
+                'GOLD': 1.5,
+                'PLATINUM': 2,
+                'DIAMOND': 2.5
+            }.get(self.membership_level, 1)
+            
+            # Calculate points earned
+            self.points_earned = int(Decimal(str(self.total_amount)) / 1000 * points_multiplier)
+            
+            # Add points to user's profile
+            if self.points_earned > 0:
+                self.user.profile.add_points(self.total_amount)
+        
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
+
+    def get_discount_percentage(self):
+        discount_map = {
+            'BRONZE': 0,
+            'SILVER': 5,
+            'GOLD': 10,
+            'PLATINUM': 15,
+            'DIAMOND': 20
+        }
+        return discount_map.get(self.membership_level, 0)
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -137,24 +183,43 @@ class UserProfile(models.Model):
     total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def update_membership_level(self):
+        """Update membership level based on points"""
+        old_level = self.membership_level
+        
+        # Calculate points thresholds
         if self.points >= 10000:
-            self.membership_level = 'DIAMOND'
+            new_level = 'DIAMOND'
         elif self.points >= 5000:
-            self.membership_level = 'PLATINUM'
+            new_level = 'PLATINUM'
         elif self.points >= 2000:
-            self.membership_level = 'GOLD'
+            new_level = 'GOLD'
         elif self.points >= 1000:
-            self.membership_level = 'SILVER'
+            new_level = 'SILVER'
         else:
-            self.membership_level = 'BRONZE'
-        self.save()
+            new_level = 'BRONZE'
+        
+        # Only update and save if the level has changed
+        if old_level != new_level:
+            self.membership_level = new_level
+            self.save(update_fields=['membership_level'])
+            return True
+        return False
 
     def add_points(self, amount):
-        points = int(amount / 1000)
-        self.points += points
+        """Add points from a purchase and update membership level"""
+        # Calculate points to add (1 point per 1000 VND)
+        points_to_add = int(Decimal(str(amount)) / 1000)
+        
+        # Add points
+        self.points += points_to_add
+        
+        # Save points first
+        self.save(update_fields=['points'])
+        
+        # Then update membership level
         self.update_membership_level()
-        self.save()
-        return points
+        
+        return points_to_add
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

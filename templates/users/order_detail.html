@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold">Order #{{ order.id }}</h1>
+                <p class="text-gray-600">{{ order.created_at|date:"F j, Y H:i" }}</p>
+            </div>
+            <a href="{% url 'staff-orders' %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Orders
+            </a>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-3">Customer Information</h2>
+                <p><strong>Name:</strong> {{ order.user.username }}</p>
+                <p><strong>Email:</strong> {{ order.user.email }}</p>
+                <p><strong>Phone:</strong> {{ order.phone_number }}</p>
+                <p><strong>Membership Level:</strong> {{ order.membership_level }}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-3">Delivery Information</h2>
+                <p><strong>Address:</strong> {{ order.delivery_address }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        {% if order.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                        {% elif order.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                        {% elif order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                        {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </p>
+                {% if order.status == 'DELIVERED' %}
+                <p><strong>Points Earned:</strong> {{ order.points_earned|floatformat:0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">Order Items</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in order_items %}
+                        <tr>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ item.menu_item.name }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ item.size.get_size_display }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ item.price }} VND</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ item.quantity }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ item.get_total }} VND</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h2 class="text-lg font-semibold mb-3">Order Summary</h2>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>{{ order.subtotal }} VND</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="flex justify-between text-green-600">
+                    <span>Membership Discount:</span>
+                    <span>-{{ order.discount_amount }} VND</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <span>Delivery Fee:</span>
+                    <span>{{ order.delivery_fee }} VND</span>
+                </div>
+                <div class="flex justify-between font-bold text-lg pt-2 border-t">
+                    <span>Total:</span>
+                    <span>{{ order.total_amount }} VND</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Status -->
+        <div class="mt-6">
+            <form method="POST" action="{% url 'update-order-status' order.id %}" class="flex items-center space-x-4">
+                {% csrf_token %}
+                <select name="status" 
+                        class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 flex-grow">
+                    <option value="PENDING" {% if order.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="PROCESSING" {% if order.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                    <option value="DELIVERED" {% if order.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                    <option value="CANCELLED" {% if order.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Update Status
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

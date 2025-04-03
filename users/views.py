@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from .forms import UserRegistrationForm
 from .models import MenuItem, CartItem, Order, OrderItem, Size, Category, Comment
@@ -9,8 +9,10 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .forms import CommentForm
+import json
+from decimal import Decimal
 
 def forgot_password(request):
     return render(request, 'users/forgot_password.html')
@@ -77,14 +79,49 @@ def checkout(request):
         return redirect('cart-view')
     
     subtotal = sum(item.get_total() for item in cart_items)
+    delivery_fee = Decimal('15000')  # Base delivery fee
+    
+    # Calculate membership discount
+    membership_level = request.user.profile.membership_level
+    discount_percentage = Decimal(str({
+        'BRONZE': 0,
+        'SILVER': 5,
+        'GOLD': 10,
+        'PLATINUM': 15,
+        'DIAMOND': 20
+    }.get(membership_level, 0)))
+    
+    discount_amount = (subtotal * discount_percentage) / Decimal('100')
+    
+    # Free delivery for Platinum and Diamond members
+    if membership_level in ['PLATINUM', 'DIAMOND']:
+        delivery_fee = Decimal('0')
+    
+    final_total = subtotal - discount_amount + delivery_fee
+    
+    # Calculate points to be earned (will be added when order is delivered)
+    points_multiplier = Decimal(str({
+        'BRONZE': 1,
+        'SILVER': 1.2,
+        'GOLD': 1.5,
+        'PLATINUM': 2,
+        'DIAMOND': 2.5
+    }.get(membership_level, 1)))
+    
+    points_to_earn = int((final_total / Decimal('1000')) * points_multiplier)
     
     if request.method == 'POST':
         # Create order
         order = Order.objects.create(
             user=request.user,
-            total_amount=subtotal,
+            subtotal=subtotal,
+            discount_amount=discount_amount,
+            delivery_fee=delivery_fee,
+            total_amount=final_total,
             delivery_address=request.POST['delivery_address'],
-            phone_number=request.POST['phone_number']
+            phone_number=request.POST['phone_number'],
+            membership_level=membership_level,
+            points_earned=0  # Points will be set when order is delivered
         )
         
         # Create order items
@@ -106,6 +143,10 @@ def checkout(request):
     context = {
         'cart_items': cart_items,
         'total': subtotal,
+        'discount_amount': discount_amount,
+        'delivery_fee': delivery_fee,
+        'final_total': final_total,
+        'points_to_earn': points_to_earn
     }
     return render(request, 'users/checkout.html', context)
 
@@ -219,25 +260,64 @@ def cart_add(request, item_id):
 
 @login_required
 def cart_update_quantity(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
-    quantity = int(request.POST.get('quantity', 1))
-    
-    if quantity > 0:
-        cart_item.quantity = quantity
-        cart_item.save()
-        messages.success(request, "Cart updated successfully.")
-    else:
-        cart_item.delete()
-        messages.success(request, "Item removed from cart.")
+    try:
+        cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
+        quantity = int(request.POST.get('quantity', 1))
         
-    return redirect('cart-view')
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+            
+            # Calculate new totals
+            cart_items = CartItem.objects.filter(user=request.user)
+            subtotal = sum(item.get_total() for item in cart_items)
+            
+            # Calculate discount if applicable
+            discount = 0
+            if request.user.profile.membership_level != 'BRONZE':
+                discount_percentage = {
+                    'SILVER': 5,
+                    'GOLD': 10,
+                    'PLATINUM': 15,
+                    'DIAMOND': 20
+                }.get(request.user.profile.membership_level, 0)
+                
+                if discount_percentage:
+                    discount = (subtotal * discount_percentage) / 100
+            
+            total = subtotal - discount
+            
+            return JsonResponse({
+                'success': True,
+                'item_total': cart_item.get_total(),
+                'subtotal': subtotal,
+                'discount': discount,
+                'total': total
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Quantity must be greater than 0'
+            }, status=400)
+            
+    except CartItem.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Item not found'
+        }, status=404)
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid quantity'
+        }, status=400)
 
 @login_required
 def cart_remove(request, item_id):
-    cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
-    cart_item.delete()
-    messages.success(request, "Item removed from cart.")
-    return redirect('cart-view')
+    if request.method == 'POST':
+        cart_item = get_object_or_404(CartItem, id=item_id, user=request.user)
+        cart_item.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
 def about(request):
     return render(request, 'about.html')
@@ -293,3 +373,103 @@ def profile(request):
         'orders': orders,
     }
     return render(request, 'users/profile.html', context)
+
+@login_required
+def membership(request):
+    profile = request.user.profile
+    current_points = profile.points
+    
+    # Calculate points needed for next level
+    if profile.membership_level == 'BRONZE':
+        points_needed = 1000 - current_points  # Need 1000 for Silver
+        next_level = 'SILVER'
+    elif profile.membership_level == 'SILVER':
+        points_needed = 2000 - current_points  # Need 2000 for Gold
+        next_level = 'GOLD'
+    elif profile.membership_level == 'GOLD':
+        points_needed = 5000 - current_points  # Need 5000 for Platinum
+        next_level = 'PLATINUM'
+    elif profile.membership_level == 'PLATINUM':
+        points_needed = 10000 - current_points  # Need 10000 for Diamond
+        next_level = 'DIAMOND'
+    else:  # DIAMOND
+        points_needed = 0
+        next_level = None
+    
+    context = {
+        'profile': profile,
+        'current_points': current_points,
+        'points_needed': max(0, points_needed),
+        'next_level': next_level,
+        'progress_percentage': min(100, (current_points / (points_needed + current_points) * 100 if points_needed > 0 else 100))
+    }
+    return render(request, 'users/membership.html', context)
+
+def is_staff(user):
+    return user.is_staff
+
+@login_required
+@user_passes_test(is_staff)
+def staff_orders(request):
+    orders = Order.objects.all().order_by('-created_at')
+    
+    # Apply filters
+    status = request.GET.get('status')
+    date = request.GET.get('date')
+    
+    if status:
+        orders = orders.filter(status=status)
+    if date:
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        orders = orders.filter(created_at__date=date_obj)
+    
+    # Pagination
+    paginator = Paginator(orders, 10)  # Show 10 orders per page
+    page = request.GET.get('page')
+    orders = paginator.get_page(page)
+    
+    return render(request, 'users/staff_orders.html', {'orders': orders})
+
+@login_required
+@user_passes_test(is_staff)
+def update_order_status(request, order_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+    
+    order = get_object_or_404(Order, id=order_id)
+    new_status = request.POST.get('status')
+    
+    if new_status not in ['PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED']:
+        return JsonResponse({'error': 'Invalid status'}, status=400)
+    
+    # If marking as delivered, add points to user's profile
+    if new_status == 'DELIVERED' and order.status != 'DELIVERED':
+        points_multiplier = Decimal(str({
+            'BRONZE': 1,
+            'SILVER': 1.2,
+            'GOLD': 1.5,
+            'PLATINUM': 2,
+            'DIAMOND': 2.5
+        }.get(order.membership_level, 1)))
+        
+        points_earned = int((order.total_amount / Decimal('1000')) * points_multiplier)
+        order.points_earned = points_earned
+        order.user.profile.add_points(order.total_amount)
+        messages.success(request, f'Order marked as delivered. {points_earned} points added to customer\'s account.')
+    
+    order.status = new_status
+    order.save()
+    
+    return redirect('staff-orders')
+
+@login_required
+@user_passes_test(is_staff)
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    order_items = order.orderitem_set.all()
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'users/order_detail.html', context)

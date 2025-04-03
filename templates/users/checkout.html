@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load user_filters %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -55,10 +56,57 @@
                     </div>
                     {% endfor %}
                     
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-lg font-bold">
-                            <span>Total:</span>
+                    <div class="space-y-3 pt-4 border-t">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal:</span>
                             <span>{{ total }} VND</span>
+                        </div>
+
+                        {% if user.profile.membership_level != 'BRONZE' %}
+                        <div class="flex justify-between text-green-600">
+                            <span>
+                                {% if user.profile.membership_level == 'SILVER' %}
+                                    Silver Member Discount (5%):
+                                {% elif user.profile.membership_level == 'GOLD' %}
+                                    Gold Member Discount (10%):
+                                {% elif user.profile.membership_level == 'PLATINUM' %}
+                                    Platinum Member Discount (15%):
+                                {% elif user.profile.membership_level == 'DIAMOND' %}
+                                    Diamond Member Discount (20%):
+                                {% endif %}
+                            </span>
+                            <span>-{{ discount_amount }} VND</span>
+                        </div>
+                        {% endif %}
+
+                        {% if user.profile.membership_level == 'PLATINUM' or user.profile.membership_level == 'DIAMOND' %}
+                        <div class="flex justify-between text-green-600">
+                            <span>Free Delivery:</span>
+                            <span>-{{ delivery_fee }} VND</span>
+                        </div>
+                        {% else %}
+                        <div class="flex justify-between text-gray-600">
+                            <span>Delivery Fee:</span>
+                            <span>{{ delivery_fee }} VND</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="flex justify-between text-lg font-bold pt-3 border-t">
+                            <span>Total:</span>
+                            <span>{{ final_total }} VND</span>
+                        </div>
+
+                        <div class="text-sm text-gray-500 mt-4">
+                            {% if user.profile.membership_level != 'BRONZE' %}
+                            <p class="flex items-center text-green-600">
+                                <i class="fas fa-tag mr-2"></i>
+                                Member discount applied
+                            </p>
+                            {% endif %}
+                            <p class="flex items-center mt-1">
+                                <i class="fas fa-coins mr-2"></i>
+                                You'll earn {{ points_to_earn|floatformat:0 }} points from this order
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'users',
     'tailwind',
     'django_browser_reload',
+    'users.templatetags.user_filters',
 ]
 
 TAILWIND_APP_NAME = 'theme'
