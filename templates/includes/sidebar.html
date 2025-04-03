@@ -86,7 +86,7 @@
                     {% if user.profile.membership_level != 'DIAMOND' %}
                         <div class="mt-3">
                             <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                <span>Progress to Next Level</span>
+                                <span>Next Level</span>
                                 {% if user.profile.membership_level == 'BRONZE' %}
                                     <span>{{ user.profile.points }}/1000</span>
                                 {% elif user.profile.membership_level == 'SILVER' %}

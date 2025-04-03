@@ -1,52 +1,126 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">{% if address %}Edit{% else %}Add{% endif %} Shipping Address</h1>
-        
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
-            
-            <div>
-                <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name</label>
-                {{ form.full_name }}
-                {% if form.full_name.errors %}
-                    <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
-                {% endif %}
-            </div>
-            
-            <div>
-                <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                {{ form.phone_number }}
-                {% if form.phone_number.errors %}
-                    <p class="mt-1 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
-                {% endif %}
-            </div>
-            
-            <div>
-                <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700">Address</label>
-                {{ form.address }}
-                {% if form.address.errors %}
-                    <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
-                {% endif %}
-            </div>
-            
-            <div class="flex items-center">
-                {{ form.is_default }}
-                <label for="{{ form.is_default.id_for_label }}" class="ml-2 text-sm text-gray-700">Set as default address</label>
-            </div>
-            
-            <div class="flex space-x-4">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    {% if address %}Update{% else %}Add{% endif %} Address
-                </button>
-                <a href="{% url 'shipping-addresses' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                    Cancel
-                </a>
-            </div>
-        </form>
+        <div class="flex items-center space-x-4 mb-8">
+            <a href="{% url 'shipping-addresses' %}" class="text-gray-600 hover:text-gray-800">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2 class="text-3xl font-bold">{% if form.instance.id %}Edit{% else %}Add New{% endif %} Address</h2>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Full Name Field -->
+                <div>
+                    <div class="relative flex items-stretch">
+                        <div class="flex items-center px-4 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                               id="{{ form.full_name.id_for_label }}"
+                               name="{{ form.full_name.html_name }}"
+                               value="{{ form.full_name.value|default:'' }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors {% if form.full_name.errors %}border-red-500{% endif %}"
+                               placeholder="Full Name"
+                               required>
+                        {% if form.full_name.errors %}
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% for error in form.full_name.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Phone Number Field -->
+                <div>
+                    <div class="relative flex items-stretch">
+                        <div class="flex items-center px-4 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                            <i class="fas fa-phone text-gray-400"></i>
+                        </div>
+                        <input type="tel" 
+                               id="{{ form.phone_number.id_for_label }}"
+                               name="{{ form.phone_number.html_name }}"
+                               value="{{ form.phone_number.value|default:'' }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors {% if form.phone_number.errors %}border-red-500{% endif %}"
+                               placeholder="Phone Number"
+                               required>
+                        {% if form.phone_number.errors %}
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% for error in form.phone_number.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Address Field -->
+                <div>
+                    <div class="relative flex items-stretch">
+                        <div class="flex items-center px-4 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                        </div>
+                        <textarea id="{{ form.address.id_for_label }}"
+                                  name="{{ form.address.html_name }}"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors h-32 resize-none {% if form.address.errors %}border-red-500{% endif %}"
+                                  placeholder="Delivery Address"
+                                  required>{{ form.address.value|default:'' }}</textarea>
+                        {% if form.address.errors %}
+                        <div class="absolute top-2 right-2 pointer-events-none">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% for error in form.address.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Default Address Checkbox -->
+                <div class="flex items-center bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center px-3 text-gray-400">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <input type="checkbox" 
+                           id="{{ form.is_default.id_for_label }}"
+                           name="{{ form.is_default.html_name }}"
+                           {% if form.is_default.value %}checked{% endif %}
+                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors">
+                    <label for="{{ form.is_default.id_for_label }}" class="ml-2 block text-sm text-gray-700">
+                        Set as default address
+                    </label>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-end space-x-4 pt-6 border-t">
+                    <a href="{% url 'shipping-addresses' %}" 
+                       class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        {% if form.instance.id %}Save Changes{% else %}Add Address{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Input group hover effect */
+    .relative:hover .bg-gray-50 {
+        @apply bg-gray-100;
+    }
+</style>
 {% endblock %} 

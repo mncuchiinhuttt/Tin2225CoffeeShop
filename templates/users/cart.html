@@ -1,99 +1,130 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-	<h2 class="text-3xl font-bold mb-8">Your Cart</h2>
+	<div class="flex items-center justify-between mb-8">
+		<h2 class="text-3xl font-bold">Shopping Cart</h2>
+		<a href="{% url 'menu-list' %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+			<i class="fas fa-arrow-left mr-2"></i> Continue Shopping
+		</a>
+	</div>
+
 	{% if cart_items %}
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 			<!-- Cart items list column -->
-			<div class="lg:col-span-2">
-				<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+			<div class="lg:col-span-2 space-y-4">
+				{% for item in cart_items %}
+				<div id="cart-item-{{ item.id }}" class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
 					<div class="p-6">
-						<div class="overflow-x-auto">
-							<table class="min-w-full divide-y divide-gray-200">
-								<thead class="bg-gray-50">
-									<tr>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-									</tr>
-								</thead>
-								<tbody class="bg-white divide-y divide-gray-200">
-									{% for item in cart_items %}
-									<tr id="cart-item-{{ item.id }}">
-										<td class="px-6 py-4 whitespace-nowrap">{{ item.menu_item.name }}</td>
-										<td class="px-6 py-4 whitespace-nowrap">{{ item.size.get_size_display }}</td>
-										<td class="px-6 py-4 whitespace-nowrap item-price">{{ item.size.price }} VND</td>
-										<td class="px-6 py-4 whitespace-nowrap">
-											<div class="flex items-center border rounded-lg max-w-[150px]">
-												<button type="button" 
-														class="px-3 py-1 text-gray-600 hover:text-gray-800" 
-														onclick="updateQuantity({{ item.id }}, Math.max(1, {{ item.quantity }} - 1))">−</button>
-												<input type="number" 
-													   value="{{ item.quantity }}" 
-													   min="1" 
-													   class="w-16 text-center border-x px-2 py-1 focus:outline-none quantity-input"
-													   onchange="updateQuantity({{ item.id }}, this.value)"
-													   data-item-id="{{ item.id }}">
-												<button type="button" 
-														class="px-3 py-1 text-gray-600 hover:text-gray-800" 
-														onclick="updateQuantity({{ item.id }}, {{ item.quantity }} + 1)">+</button>
-											</div>
-										</td>
-										<td class="px-6 py-4 whitespace-nowrap item-total">{{ item.get_total }} VND</td>
-										<td class="px-6 py-4 whitespace-nowrap">
-											<button onclick="removeItem({{ item.id }})" 
-													class="text-red-600 hover:text-red-800">
-												<i class="fas fa-trash"></i>
+						<div class="flex items-center space-x-6">
+							<!-- Product Image -->
+							<div class="relative aspect-square w-24 h-24 flex-shrink-0">
+								{% if item.menu_item.image %}
+								<img src="{{ item.menu_item.get_image_url }}" 
+									 alt="{{ item.menu_item.name }}"
+									 class="w-full h-full object-cover rounded-lg">
+								{% else %}
+								<div class="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+									<i class="fas fa-coffee text-gray-400 text-3xl"></i>
+								</div>
+								{% endif %}
+							</div>
+
+							<!-- Product Details -->
+							<div class="flex-grow">
+								<div class="flex justify-between items-start">
+									<div>
+										<h3 class="text-lg font-semibold text-gray-900">{{ item.menu_item.name }}</h3>
+										<p class="text-sm text-gray-600">Size: {{ item.size.get_size_display }}</p>
+									</div>
+									<button onclick="removeItem({{ item.id }})" 
+											class="text-gray-400 hover:text-red-600 transition-colors">
+										<i class="fas fa-times"></i>
+									</button>
+								</div>
+
+								<div class="mt-4 flex items-center justify-between">
+									<div class="flex items-center space-x-4">
+										<div class="flex items-center bg-gray-100 rounded-lg">
+											<button type="button" 
+													class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-l-lg transition-colors" 
+													onclick="updateQuantity({{ item.id }}, Math.max(1, {{ item.quantity }} - 1))">
+												<i class="fas fa-minus"></i>
 											</button>
-										</td>
-									</tr>
-									{% endfor %}
-								</tbody>
-							</table>
+											<input type="number" 
+												   value="{{ item.quantity }}" 
+												   min="1" 
+												   class="w-16 text-center bg-transparent px-2 py-2 focus:outline-none quantity-input"
+												   onchange="updateQuantity({{ item.id }}, this.value)"
+												   data-item-id="{{ item.id }}">
+											<button type="button" 
+													class="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-r-lg transition-colors" 
+													onclick="updateQuantity({{ item.id }}, {{ item.quantity }} + 1)">
+												<i class="fas fa-plus"></i>
+											</button>
+										</div>
+										<span class="text-gray-500">×</span>
+										<span class="font-medium item-price">{{ item.size.price|intcomma }} VND</span>
+									</div>
+									<div class="text-lg font-semibold text-green-600 item-total">
+										{{ item.get_total|intcomma }} VND
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
+				{% endfor %}
 			</div>
 
 			<!-- Order summary column -->
 			<div class="lg:col-span-1">
-				<div class="bg-white rounded-lg shadow-lg p-6">
-					<h5 class="text-xl font-semibold mb-4">Order Summary</h5>
-					<div class="space-y-3">
-						<div class="flex justify-between">
-							<span class="text-gray-600">Subtotal:</span>
-							<span class="font-medium subtotal-amount">{{ total }} VND</span>
+				<div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
+					<h5 class="text-xl font-semibold mb-6">Order Summary</h5>
+					<div class="space-y-4">
+						<div class="flex justify-between text-gray-600">
+							<span>Subtotal</span>
+							<span class="font-medium subtotal-amount">{{ total|intcomma }} VND</span>
 						</div>
 						{% if discount %}
 						<div class="flex justify-between text-green-600">
-							<span>Discount:</span>
-							<span class="discount-amount">-{{ discount }} VND</span>
+							<span class="flex items-center">
+								<i class="fas fa-tag mr-2"></i> Member Discount
+							</span>
+							<span class="discount-amount">-{{ discount|intcomma }} VND</span>
 						</div>
 						{% endif %}
-						<div class="border-t pt-3">
-							<div class="flex justify-between font-bold">
-								<span>Total:</span>
-								<span class="total-amount">{{ total }} VND</span>
+						<div class="border-t border-dashed pt-4">
+							<div class="flex justify-between text-lg font-bold">
+								<span>Total</span>
+								<span class="text-green-600 total-amount">{{ total|intcomma }} VND</span>
 							</div>
 						</div>
-						<a href="{% url 'checkout' %}" 
-						   class="w-full flex justify-center items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 mt-4">
-							<i class="fas fa-shopping-cart mr-2"></i>Proceed to Checkout
-						</a>
+
+						<div class="mt-6 space-y-4">
+							<a href="{% url 'checkout' %}" 
+							   class="w-full flex justify-center items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200">
+								<i class="fas fa-lock mr-2"></i>Proceed to Checkout
+							</a>
+							<div class="flex items-center justify-center text-sm text-gray-500">
+								<i class="fas fa-shield-alt mr-2"></i>
+								Secure Checkout
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	{% else %}
-		<div class="text-center py-12">
-			<i class="fas fa-shopping-cart text-6xl text-gray-400 mb-4"></i>
-			<p class="text-xl text-gray-600 mb-6">Your cart is empty</p>
+		<div class="bg-white rounded-lg shadow-lg p-12 text-center">
+			<div class="mb-6">
+				<i class="fas fa-shopping-cart text-7xl text-gray-300"></i>
+			</div>
+			<h3 class="text-2xl font-semibold text-gray-800 mb-4">Your cart is empty</h3>
+			<p class="text-gray-600 mb-8">Looks like you haven't added anything to your cart yet.</p>
 			<a href="{% url 'menu-list' %}" 
-			   class="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
+			   class="inline-flex items-center px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
 				<i class="fas fa-coffee mr-2"></i>Browse Menu
 			</a>
 		</div>
