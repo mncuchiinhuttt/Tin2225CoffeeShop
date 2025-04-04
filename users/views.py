@@ -78,6 +78,14 @@ def checkout(request):
         messages.error(request, 'Your cart is empty')
         return redirect('cart-view')
     
+    # Get user's shipping addresses
+    shipping_addresses = ShippingAddress.objects.filter(user=request.user)
+    
+    # If user has no shipping addresses, redirect to add one
+    if not shipping_addresses.exists():
+        messages.warning(request, 'Please add a shipping address before checkout')
+        return redirect('add-shipping-address')
+    
     subtotal = sum(item.get_total() for item in cart_items)
     delivery_fee = Decimal('15000')  # Base delivery fee
     
@@ -110,53 +118,68 @@ def checkout(request):
     
     points_to_earn = int((final_total / Decimal('1000')) * points_multiplier)
     
-    # Get user's shipping addresses
-    shipping_addresses = ShippingAddress.objects.filter(user=request.user)
-    
     if request.method == 'POST':
         # Handle shipping address selection/creation
         address_id = request.POST.get('address_id')
+        
+        if not address_id:
+            messages.error(request, 'Please select a shipping address')
+            return redirect('checkout')
+            
         if address_id == 'new':
             # Create new address
-            address = ShippingAddress.objects.create(
-                user=request.user,
-                full_name=request.POST['full_name'],
-                phone_number=request.POST['phone_number'],
-                address=request.POST['address'],
-                is_default=request.POST.get('is_default', False)
-            )
+            try:
+                address = ShippingAddress.objects.create(
+                    user=request.user,
+                    full_name=request.POST['full_name'],
+                    phone_number=request.POST['phone_number'],
+                    address=request.POST['address'],
+                    is_default=request.POST.get('is_default', False) == 'true'
+                )
+            except Exception as e:
+                messages.error(request, f'Error creating shipping address: {str(e)}')
+                return redirect('checkout')
         else:
-            # Use existing address
-            address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+            try:
+                # Use existing address
+                address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+            except ShippingAddress.DoesNotExist:
+                messages.error(request, 'Selected shipping address not found')
+                return redirect('checkout')
         
-        # Create order
-        order = Order.objects.create(
-            user=request.user,
-            subtotal=subtotal,
-            discount_amount=discount_amount,
-            delivery_fee=delivery_fee,
-            total_amount=final_total,
-            delivery_address=address.address,
-            phone_number=address.phone_number,
-            membership_level=membership_level,
-            points_earned=0  # Points will be set when order is delivered
-        )
-        
-        # Create order items
-        for cart_item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                menu_item=cart_item.menu_item,
-                size=cart_item.size,
-                quantity=cart_item.quantity,
-                price=cart_item.size.price
+        try:
+            # Create order
+            order = Order.objects.create(
+                user=request.user,
+                subtotal=subtotal,
+                discount_amount=discount_amount,
+                delivery_fee=delivery_fee,
+                total_amount=final_total,
+                delivery_address=address.address,
+                phone_number=address.phone_number,
+                membership_level=membership_level,
+                points_earned=0 
             )
-        
-        # Clear cart
-        cart_items.delete()
-        
-        messages.success(request, 'Order placed successfully!')
-        return redirect('order-history')
+            
+            # Create order items
+            for cart_item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    menu_item=cart_item.menu_item,
+                    size=cart_item.size,
+                    quantity=cart_item.quantity,
+                    price=cart_item.size.price
+                )
+            
+            # Clear cart
+            cart_items.delete()
+            
+            messages.success(request, 'Order placed successfully!')
+            return redirect('order-history')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating order: {str(e)}')
+            return redirect('checkout')
     
     context = {
         'cart_items': cart_items,
