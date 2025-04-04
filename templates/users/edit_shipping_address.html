@@ -5,7 +5,7 @@
 <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 class="text-center text-3xl font-extrabold text-gray-900">
-            Add New Shipping Address
+            Edit Shipping Address
         </h2>
     </div>
 
@@ -20,6 +20,7 @@
                         <input type="text" 
                                name="full_name" 
                                id="full_name"
+                               value="{{ address.full_name }}"
                                class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-blue-400 focus:outline-none transition duration-200 bg-white peer"
                                placeholder=" "
                                required>
@@ -39,6 +40,7 @@
                         <input type="tel" 
                                name="phone_number" 
                                id="phone_number"
+                               value="{{ address.phone_number }}"
                                class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-blue-400 focus:outline-none transition duration-200 bg-white peer"
                                placeholder=" "
                                required>
@@ -59,7 +61,7 @@
                                   id="address"
                                   class="block w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-blue-400 focus:outline-none transition duration-200 bg-white peer min-h-[100px]"
                                   placeholder=" "
-                                  required></textarea>
+                                  required>{{ address.address }}</textarea>
                         <label for="address" 
                                class="absolute text-sm text-gray-500 duration-200 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-6 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1">
                             Address
@@ -85,6 +87,7 @@
                                name="is_default" 
                                id="is_default" 
                                value="true"
+                               {% if address.is_default %}checked{% endif %}
                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                     </label>
                 </div>
@@ -97,7 +100,7 @@
                     </a>
                     <button type="submit" 
                             class="flex-1 inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        Add Address
+                        Save Changes
                     </button>
                 </div>
             </form>

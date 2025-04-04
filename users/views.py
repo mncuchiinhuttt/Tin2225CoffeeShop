@@ -522,25 +522,32 @@ def add_shipping_address(request):
 @login_required
 def edit_shipping_address(request, address_id):
     address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
+    
     if request.method == 'POST':
-        form = ShippingAddressForm(request.POST, instance=address)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Shipping address updated successfully.')
-            return redirect('shipping-addresses')
-    else:
-        form = ShippingAddressForm(instance=address)
+        # Update address
+        address.full_name = request.POST['full_name']
+        address.phone_number = request.POST['phone_number']
+        address.address = request.POST['address']
+        address.is_default = request.POST.get('is_default') == 'true'
+        address.save()
+        
+        messages.success(request, 'Address updated successfully!')
+        return redirect('shipping-addresses')
     
     context = {
-        'form': form,
-        'address': address,
+        'address': address
     }
     return render(request, 'users/edit_shipping_address.html', context)
 
 @login_required
 def delete_shipping_address(request, address_id):
     address = get_object_or_404(ShippingAddress, id=address_id, user=request.user)
-    if request.method == 'POST':
-        address.delete()
-        messages.success(request, 'Shipping address deleted successfully.')
+    
+    # Don't allow deleting default address
+    if address.is_default:
+        messages.error(request, 'Cannot delete default address. Please set another address as default first.')
+        return redirect('shipping-addresses')
+    
+    address.delete()
+    messages.success(request, 'Address deleted successfully!')
     return redirect('shipping-addresses')
