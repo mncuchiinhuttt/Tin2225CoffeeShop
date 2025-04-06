@@ -79,7 +79,7 @@
                             <p class="text-xs text-gray-400">{{ user.profile.points }} points</p>
                         </div>
                         <span class="{% if user.profile.membership_level == 'BRONZE' %}bg-yellow-700{% elif user.profile.membership_level == 'SILVER' %}bg-gray-400{% elif user.profile.membership_level == 'GOLD' %}bg-yellow-500{% elif user.profile.membership_level == 'PLATINUM' %}bg-purple-600{% else %}bg-blue-400{% endif %} text-xs text-gray-100 px-2 py-1 rounded-full">
-                            <i class="fas fa-crown mr-1"></i>
+                            <i class="fas fa-crown mr-1"></i> 
                             {{ user.profile.membership_level|lower|capfirst }}
                         </span>
                     </div>
