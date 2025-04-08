@@ -41,6 +41,7 @@ urlpatterns = [
     path('shipping-addresses/add/', user_views.add_shipping_address, name='add-shipping-address'),
     path('shipping-addresses/<int:address_id>/edit/', user_views.edit_shipping_address, name='edit-shipping-address'),
     path('shipping-addresses/<int:address_id>/delete/', user_views.delete_shipping_address, name='delete-shipping-address'),
+    path('search/', user_views.search_menu_items, name='search'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

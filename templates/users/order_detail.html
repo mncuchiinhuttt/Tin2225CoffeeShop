@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -101,6 +102,55 @@
                 <div class="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>Total:</span>
                     <span>{{ order.total_amount }} VND</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Statistics -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Order History Stats -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Your Order History</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Orders</span>
+                        <span class="font-semibold">{{ total_orders }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Spent</span>
+                        <span class="font-semibold">{{ total_spent|intcomma }} VND</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Average Order Value</span>
+                        <span class="font-semibold">{{ avg_order_value|intcomma }} VND</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Points Earned</span>
+                        <span class="font-semibold">{{ total_points_earned|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ordering Patterns -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Your Ordering Patterns</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Most Ordered Item</span>
+                        <span class="font-semibold">{{ most_ordered_item }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Favorite Category</span>
+                        <span class="font-semibold">{{ favorite_category }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Orders This Month</span>
+                        <span class="font-semibold">{{ orders_this_month }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Savings</span>
+                        <span class="font-semibold text-green-600">{{ total_savings|intcomma }} VND</span>
+                    </div>
                 </div>
             </div>
         </div>

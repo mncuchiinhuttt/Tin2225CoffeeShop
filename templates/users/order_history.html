@@ -1,202 +1,218 @@
 {% extends 'base.html' %}
+{% load humanize %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h2 class="text-3xl font-bold mb-8">Order History</h2>
-    
-    <!-- Filter Form -->
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select name="status" id="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">All Status</option>
-                    {% for status_code, status_name in status_choices %}
-                    <option value="{{ status_code }}" {% if status_code == current_status %}selected{% endif %}>
-                        {{ status_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                       id="date_from" name="date_from" value="{{ date_from }}">
-            </div>
-            <div>
-                <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                       id="date_to" name="date_to" value="{{ date_to }}">
-            </div>
-            <div>
-                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                       id="search" name="search" value="{{ search }}" placeholder="Order ID, Address, Phone">
-            </div>
-            <div>
-                <label for="sort_by" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                <select name="sort_by" id="sort_by" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
-                    <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
-                    <option value="total_amount" {% if current_sort == 'total_amount' %}selected{% endif %}>Price (Low to High)</option>
-                    <option value="-total_amount" {% if current_sort == '-total_amount' %}selected{% endif %}>Price (High to Low)</option>
-                    <option value="status" {% if current_sort == 'status' %}selected{% endif %}>Status</option>
-                </select>
-            </div>
-            <div class="flex items-end space-x-4">
-                <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
-                    Apply Filters
-                </button>
-                <a href="{% url 'order-history' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                    Clear Filters
-                </a>
-            </div>
-        </form>
-    </div>
-    
-    {% if orders %}
-        {% for order in orders %}
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <div class="flex justify-between items-start mb-4">
-                <h5 class="text-xl font-semibold">Order #{{ order.id }}</h5>
-                <span class="px-4 py-2 rounded-full text-sm font-medium
-                    {% if order.status == 'DELIVERED' %}bg-green-100 text-green-800
-                    {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800
-                    {% else %}bg-blue-100 text-blue-800{% endif %}">
-                    {{ order.get_status_display }}
-                </span>
-            </div>
-            <p class="text-sm text-gray-500 mb-4">
-                Ordered on: {{ order.created_at|date:"F j, Y, g:i a" }}
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <div class="space-y-2">
-                        <p class="flex justify-between">
-                            <span class="text-gray-600">Subtotal:</span>
-                            <span>{{ order.subtotal }} VND</span>
-                        </p>
-                        {% if order.discount_amount > 0 %}
-                        <p class="flex justify-between text-green-600">
-                            <span>{{ order.membership_level }} Member Discount ({{ order.get_discount_percentage }}%):</span>
-                            <span>-{{ order.discount_amount }} VND</span>
-                        </p>
-                        {% endif %}
-                        {% if order.membership_level == 'PLATINUM' or order.membership_level == 'DIAMOND' %}
-                        <p class="flex justify-between text-green-600">
-                            <span>Free Delivery:</span>
-                            <span>-{{ order.delivery_fee }} VND</span>
-                        </p>
-                        {% else %}
-                        <p class="flex justify-between">
-                            <span class="text-gray-600">Delivery Fee:</span>
-                            <span>{{ order.delivery_fee }} VND</span>
-                        </p>
-                        {% endif %}
-                        <p class="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total:</span>
-                            <span>{{ order.total_amount }} VND</span>
-                        </p>
-                        {% if order.points_earned %}
-                        <p class="flex items-center text-sm text-green-600 mt-2">
-                            <i class="fas fa-coins mr-2"></i>
-                            Earned {{ order.points_earned }} points
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-2"><span class="font-medium">Delivery Address:</span> {{ order.delivery_address }}</p>
-                    <p class="mb-2"><span class="font-medium">Phone Number:</span> {{ order.phone_number }}</p>
-                    <p class="mb-2">
-                        <span class="font-medium">Membership Level:</span>
-                        <span class="inline-flex items-center">
-                            {% if order.membership_level == 'BRONZE' %}
-                                <span class="text-yellow-700">🥉 Bronze</span>
-                            {% elif order.membership_level == 'SILVER' %}
-                                <span class="text-gray-600">🥈 Silver</span>
-                            {% elif order.membership_level == 'GOLD' %}
-                                <span class="text-yellow-500">🥇 Gold</span>
-                            {% elif order.membership_level == 'PLATINUM' %}
-                                <span class="text-purple-600">💎 Platinum</span>
-                            {% elif order.membership_level == 'DIAMOND' %}
-                                <span class="text-blue-600">👑 Diamond</span>
-                            {% endif %}
-                        </span>
-                    </p>
-                </div>
+    <!-- Order Statistics Overview -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-6">Your Order Statistics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Orders -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500">Total Orders</div>
+                <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_orders }}</div>
             </div>
             
-            <div class="border-t pt-4">
-                <h6 class="text-lg font-semibold mb-3">Order Items:</h6>
-                <div class="space-y-2">
-                    {% for item in order.orderitem_set.all %}
-                    <div class="flex justify-between items-center py-2 border-b last:border-0">
-                        <span>{{ item.menu_item.name }} ({{ item.size }})</span>
-                        <span class="font-medium">
-                            {{ item.quantity }} × {{ item.price }} VND = {{ item.get_total }} VND
-                        </span>
+            <!-- Total Spent -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500">Total Spent</div>
+                <div class="mt-2 text-3xl font-bold text-gray-900">{{ total_spent|intcomma }} VND</div>
+            </div>
+            
+            <!-- Total Savings -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500">Total Savings</div>
+                <div class="mt-2 text-3xl font-bold text-green-600">{{ total_savings|intcomma }} VND</div>
+            </div>
+            
+            <!-- Total Points -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500">Total Points Earned</div>
+                <div class="mt-2 text-3xl font-bold text-blue-600">{{ total_points|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Analysis -->
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4">Monthly Analysis</h3>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- This Month vs Last Month -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Spending Comparison</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="text-sm text-gray-500">This Month</div>
+                            <div class="text-xl font-bold">{{ this_month_spent|intcomma }} VND</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">Last Month</div>
+                            <div class="text-xl font-bold">{{ last_month_spent|intcomma }} VND</div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-500 mr-2">Trend:</span>
+                            {% if spending_trend == 'up' %}
+                                <span class="text-green-600"><i class="fas fa-arrow-up"></i> Increasing</span>
+                            {% elif spending_trend == 'down' %}
+                                <span class="text-red-600"><i class="fas fa-arrow-down"></i> Decreasing</span>
+                            {% else %}
+                                <span class="text-gray-600"><i class="fas fa-equals"></i> Stable</span>
+                            {% endif %}
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Order Status Distribution -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Order Status Distribution</h4>
+                    <div class="space-y-2">
+                        {% for status, display in status_choices %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">{{ display }}</span>
+                                <span class="font-medium">{{ status_counts|get_item:status }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ordering Patterns -->
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4">Your Ordering Patterns</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Most Ordered Items -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h4 class="text-lg font-medium mb-4">Most Ordered Items</h4>
+                <div class="space-y-3">
+                    {% for item in most_ordered_items %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">{{ item.menu_item__name }}</span>
+                            <span class="font-medium">{{ item.total_ordered }} times</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500">No orders yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Favorite Categories -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h4 class="text-lg font-medium mb-4">Favorite Categories</h4>
+                <div class="space-y-3">
+                    {% for category in favorite_categories %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">{{ category.menu_item__category__name }}</span>
+                            <span class="font-medium">{{ category.total_ordered }} items</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500">No orders yet</p>
                     {% endfor %}
                 </div>
             </div>
         </div>
-        {% endfor %}
-        
-        <!-- Pagination -->
-        {% if orders.paginator.num_pages > 1 %}
-        <div class="flex justify-center mt-8">
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                {% if orders.has_previous %}
-                    <a href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
-                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">First</span>
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                    <a href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
-                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Previous</span>
-                        <i class="fas fa-angle-left"></i>
-                    </a>
-                {% endif %}
+    </div>
 
-                {% for num in orders.paginator.page_range %}
-                    {% if orders.number == num %}
-                        <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
-                            {{ num }}
-                        </span>
-                    {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
-                        <a href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            {{ num }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if orders.has_next %}
-                    <a href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
-                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Next</span>
-                        <i class="fas fa-angle-right"></i>
-                    </a>
-                    <a href="?page={{ orders.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
-                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Last</span>
-                        <i class="fas fa-angle-double-right"></i>
-                    </a>
-                {% endif %}
-            </nav>
+    <!-- Order List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Order History</h2>
         </div>
-        {% endif %}
-    {% else %}
-        <div class="text-center py-12">
-            <i class="fas fa-shopping-bag text-6xl text-gray-400 mb-4"></i>
-            <p class="text-xl text-gray-600 mb-6">You haven't placed any orders yet.</p>
-            <a href="{% url 'menu-list' %}" 
-               class="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200">
-                <i class="fas fa-coffee mr-2"></i>Browse Menu
-            </a>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Point Earned</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in orders %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">#{{ order.id }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ order.created_at|date:"F j, Y H:i" }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="space-y-2">
+                                {% for item in order.orderitem_set.all %}
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">
+                                        {{ item.quantity }}x {{ item.menu_item.name }}
+                                        {% if item.size %}
+                                        ({{ item.size.get_size_display }})
+                                        {% endif %}
+                                    </span>
+                                    <span class="text-sm font-medium">{{ item.price|intcomma }} VND</span>
+                                </div>
+                                {% endfor %}
+                                <div class="border-t pt-2 mt-2">
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-500">Subtotal:</span>
+                                        <span>{{ order.subtotal|intcomma }} VND</span>
+                                    </div>
+                                    {% if order.discount_amount > 0 %}
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-500">Discount:</span>
+                                        <span class="text-green-600">-{{ order.discount_amount|intcomma }} VND</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-500">Delivery:</span>
+                                        <span>{{ order.delivery_fee|intcomma }} VND</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span>Total:</span>
+                                        <span>{{ order.total_amount|intcomma }} VND</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm">
+                                <div class="font-medium text-gray-900">{{ order.delivery_address }}</div>
+                                <div class="text-gray-500">{{ order.phone_number }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm">
+                                <div class="text-gray-900">{{ order.get_payment_method_display }}</div>
+                                {% if order.points_earned > 0 %}
+                                <div class="text-blue-600 mt-1">
+                                    +{{ order.points_earned }} points earned
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if order.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                {% elif order.status == 'DELIVERED' %}bg-green-100 text-green-800
+                                {% elif order.status == 'CANCELLED' %}bg-red-100 text-red-800{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No orders found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}

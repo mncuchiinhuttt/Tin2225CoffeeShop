@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block content %}
 <div class="container mx-auto px-4">
     <div class="py-12 text-center bg-gray-100 rounded-lg mb-8">
@@ -33,9 +33,9 @@
                         {% with min_price=item.sizes.all|dictsort:"price"|first %}
                         {% with max_price=item.sizes.all|dictsort:"price"|last %}
                             {% if min_price.price != max_price.price %}
-                                {{ min_price.price }} - {{ max_price.price }} VND
+                                {{ min_price.price|intcomma }} - {{ max_price.price|intcomma }} VND
                             {% else %}
-                                {{ min_price.price }} VND
+                                {{ min_price.price|intcomma }} VND
                             {% endif %}
                         {% endwith %}
                         {% endwith %}

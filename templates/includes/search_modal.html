@@ -1,0 +1,144 @@
+{% load humanize %}
+<!-- Search Modal -->
+<div id="search-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop - clickable to close -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" id="search-backdrop"></div>
+    
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <!-- Modal content - prevent click propagation -->
+            <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6" onclick="event.stopPropagation();">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <div class="relative">
+                            <input type="text" 
+                                   id="search-input" 
+                                   class="block w-full rounded-lg border-0 py-3 pl-4 pr-12 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" 
+                                   placeholder="Search for menu items..."
+                                   autocomplete="off">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <kbd class="inline-flex items-center rounded border border-gray-200 px-2 py-1 text-xs font-sans font-medium text-gray-400">
+                                    ⌘K
+                                </kbd>
+                            </div>
+                        </div>
+                        
+                        <div id="search-results" class="mt-4 max-h-96 overflow-y-auto">
+                            <!-- Search results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSearchModal() {
+    const modal = document.getElementById('search-modal');
+    modal.classList.remove('hidden');
+    document.getElementById('search-input').focus();
+}
+
+function closeSearchModal() {
+    const modal = document.getElementById('search-modal');
+    modal.classList.add('hidden');
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-results').innerHTML = '';
+}
+
+// Handle keyboard shortcuts and click outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('search-modal');
+    
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Check for Command + K (Mac) or Ctrl + K (Windows/Linux)
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            openSearchModal();
+        }
+        
+        // Close modal on Escape key
+        if (e.key === 'Escape') {
+            closeSearchModal();
+        }
+    });
+
+    // Handle click outside to close
+    modal.addEventListener('click', function(e) {
+        // If clicked on the modal backdrop (not the content)
+        if (e.target === modal || e.target.id === 'search-backdrop') {
+            closeSearchModal();
+        }
+    });
+});
+
+// Handle search input
+document.getElementById('search-input').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    const resultsContainer = document.getElementById('search-results');
+    
+    if (query.length < 2) {
+        resultsContainer.innerHTML = '';
+        return;
+    }
+    
+    // Show loading state
+    resultsContainer.innerHTML = `
+        <div class="flex items-center justify-center py-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span class="ml-2 text-gray-500">Searching...</span>
+        </div>
+    `;
+    
+    // Debounce the search
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => {
+        fetch(`/search/?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.results.length === 0) {
+                    resultsContainer.innerHTML = `
+                        <div class="text-center py-4 text-gray-500">
+                            No results found for "${query}"
+                        </div>
+                    `;
+                    return;
+                }
+                
+                resultsContainer.innerHTML = data.results.map(item => `
+                    <a href="${item.url}" class="block p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="flex items-start space-x-4">
+                            ${item.image ? `
+                                <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                            ` : `
+                                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-coffee text-gray-400 text-2xl"></i>
+                                </div>
+                            `}
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-900 truncate">${item.name}</div>
+                                <div class="text-sm text-gray-600 line-clamp-2">${item.description || ''}</div>
+                                <div class="mt-1 text-sm font-medium text-blue-600">${item.price}đ</div>
+                            </div>
+                        </div>
+                    </a>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                resultsContainer.innerHTML = `
+                    <div class="text-center py-4 text-red-500">
+                        An error occurred while searching. Please try again.
+                    </div>
+                `;
+            });
+    }, 300);
+});
+</script> 

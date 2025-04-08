@@ -195,9 +195,67 @@ def checkout(request):
 @login_required
 def order_history(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Calculate order statistics
+    total_orders = orders.count()
+    total_spent = orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_savings = orders.aggregate(total=Sum('discount_amount'))['total'] or 0
+    total_points = orders.filter(status='DELIVERED').aggregate(total=Sum('points_earned'))['total'] or 0
+    
+    # Calculate average order value
+    avg_order_value = total_spent / total_orders if total_orders > 0 else 0
+    
+    # Get most ordered items
+    most_ordered_items = OrderItem.objects.filter(
+        order__user=request.user
+    ).values(
+        'menu_item__name'
+    ).annotate(
+        total_ordered=Sum('quantity')
+    ).order_by('-total_ordered')[:3]
+    
+    # Get favorite categories
+    favorite_categories = OrderItem.objects.filter(
+        order__user=request.user
+    ).values(
+        'menu_item__category__name'
+    ).annotate(
+        total_ordered=Sum('quantity')
+    ).order_by('-total_ordered')[:3]
+    
+    # Calculate status counts
+    status_counts = {}
+    for status, _ in Order.STATUS_CHOICES:
+        status_counts[status] = orders.filter(status=status).count()
+    
+    # Calculate monthly spending
+    this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month = (this_month - timedelta(days=1)).replace(day=1)
+    
+    this_month_orders = orders.filter(created_at__gte=this_month)
+    last_month_orders = orders.filter(created_at__gte=last_month, created_at__lt=this_month)
+    
+    this_month_spent = this_month_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    last_month_spent = last_month_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    # Calculate spending trend
+    spending_trend = 'up' if this_month_spent > last_month_spent else 'down' if this_month_spent < last_month_spent else 'same'
+    
     context = {
         'orders': orders,
         'status_choices': Order.STATUS_CHOICES,
+        'status_counts': status_counts,
+        # Statistics
+        'total_orders': total_orders,
+        'total_spent': total_spent,
+        'total_savings': total_savings,
+        'total_points': total_points,
+        'avg_order_value': avg_order_value,
+        'most_ordered_items': most_ordered_items,
+        'favorite_categories': favorite_categories,
+        'this_month_spent': this_month_spent,
+        'last_month_spent': last_month_spent,
+        'spending_trend': spending_trend,
     }
     return render(request, 'users/order_history.html', context)
 
@@ -508,11 +566,57 @@ def update_order_status(request, order_id):
 @user_passes_test(is_staff)
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    order_items = order.orderitem_set.all()
+    order_items = OrderItem.objects.filter(order=order)
+    
+    # Calculate user statistics
+    user = order.user
+    user_orders = Order.objects.filter(user=user)
+    
+    # Basic order statistics
+    total_orders = user_orders.count()
+    total_spent = user_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    avg_order_value = total_spent / total_orders if total_orders > 0 else 0
+    total_points_earned = user_orders.filter(status='DELIVERED').aggregate(
+        total=Sum('points_earned'))['total'] or 0
+    
+    # Calculate total savings from discounts
+    total_savings = user_orders.aggregate(
+        total=Sum('discount_amount'))['total'] or 0
+    
+    # Get most ordered items
+    most_ordered_item = OrderItem.objects.filter(
+        order__user=user
+    ).values(
+        'menu_item__name'
+    ).annotate(
+        total_ordered=Sum('quantity')
+    ).order_by('-total_ordered').first()
+    
+    # Get favorite category
+    favorite_category = OrderItem.objects.filter(
+        order__user=user
+    ).values(
+        'menu_item__category__name'
+    ).annotate(
+        total_ordered=Sum('quantity')
+    ).order_by('-total_ordered').first()
+    
+    # Calculate orders this month
+    this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    orders_this_month = user_orders.filter(created_at__gte=this_month).count()
     
     context = {
         'order': order,
         'order_items': order_items,
+        # Add statistics to context
+        'total_orders': total_orders,
+        'total_spent': total_spent,
+        'avg_order_value': avg_order_value,
+        'total_points_earned': total_points_earned,
+        'most_ordered_item': most_ordered_item['menu_item__name'] if most_ordered_item else 'N/A',
+        'favorite_category': favorite_category['menu_item__category__name'] if favorite_category else 'N/A',
+        'orders_this_month': orders_this_month,
+        'total_savings': total_savings,
     }
     return render(request, 'users/order_detail.html', context)
 
@@ -574,3 +678,31 @@ def delete_shipping_address(request, address_id):
     address.delete()
     messages.success(request, 'Address deleted successfully!')
     return redirect('shipping-addresses')
+
+def search_menu_items(request):
+    query = request.GET.get('q', '').strip()
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+    
+    # Search in menu items
+    menu_items = MenuItem.objects.filter(
+        Q(name__icontains=query) | 
+        Q(description__icontains=query)
+    ).select_related('category').prefetch_related('sizes')[:10]
+    
+    results = []
+    for item in menu_items:
+        # Get the smallest available size's price
+        smallest_size = item.sizes.filter(is_available=True).order_by('price').first()
+        
+        # Only include items that have at least one available size
+        if smallest_size:
+            results.append({
+                'name': item.name,
+                'description': item.description[:100] + '...' if len(item.description) > 100 else item.description,
+                'price': intcomma(smallest_size.price),
+                'image': item.get_image_url() if item.image else None,
+                'url': item.get_absolute_url()
+            })
+    
+    return JsonResponse({'results': results})

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load humanize %}
 {% block content %}
 <div class="container mx-auto px-4">
     <!-- Menu Header -->
@@ -75,7 +75,7 @@
                                 <label class="block w-full p-2 text-center border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-blue-300 transition-all duration-200" 
                                        for="size-{{ item.id }}-{{ size.size }}">
                                     <span class="block font-medium">{{ size.get_size_display }}</span>
-                                    <span class="block text-sm text-green-600">{{ size.price }} VND</span>
+                                    <span class="block text-sm text-green-600">{{ size.price|intcomma }} VND</span>
                                 </label>
                             </div>
                             {% endif %}

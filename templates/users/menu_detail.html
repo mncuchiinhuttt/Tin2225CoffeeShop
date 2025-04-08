@@ -49,11 +49,11 @@
                                    id="size-{{ size.size }}" 
                                    value="{{ size.id }}" 
                                    {% if forloop.first %}checked{% endif %}
-                                   data-price="{{ size.price }}">
+                                   data-price="{{ size.price|intcomma }}">
                             <label class="block w-full p-3 text-center border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-blue-300 transition-all duration-200" 
                                    for="size-{{ size.size }}">
                                 <span class="block font-medium">{{ size.get_size_display }}</span>
-                                <span class="block text-sm text-green-600">{{ size.price }} VND</span>
+                                <span class="block text-sm text-green-600">{{ size.price|intcomma }} VND</span>
                             </label>
                         </div>
                         {% endif %}
@@ -67,9 +67,9 @@
                 {% with min_price=item.sizes.all|dictsort:"price"|first %}
                 {% with max_price=item.sizes.all|dictsort:"price"|last %}
                     {% if min_price.price != max_price.price %}
-                    <p class="text-2xl font-bold text-green-600">{{ min_price.price }} - {{ max_price.price }} VND</p>
+                    <p class="text-2xl font-bold text-green-600">{{ min_price.price|intcomma }} - {{ max_price.price|intcomma }} VND</p>
                     {% else %}
-                    <p class="text-2xl font-bold text-green-600">{{ min_price.price }} VND</p>
+                    <p class="text-2xl font-bold text-green-600">{{ min_price.price|intcomma }} VND</p>
                     {% endif %}
                 {% endwith %}
                 {% endwith %}
@@ -128,9 +128,9 @@
                         {% with min_price=related_item.sizes.all|dictsort:"price"|first %}
                         {% with max_price=related_item.sizes.all|dictsort:"price"|last %}
                             {% if min_price.price != max_price.price %}
-                                {{ min_price.price }} - {{ max_price.price }} VND
+                                {{ min_price.price|intcomma }} - {{ max_price.price|intcomma }} VND
                             {% else %}
-                                {{ min_price.price }} VND
+                                {{ min_price.price|intcomma }} VND
                             {% endif %}
                         {% endwith %}
                         {% endwith %}

@@ -14,4 +14,5 @@ urlpatterns = [
     path('shipping-addresses/add/', views.add_shipping_address, name='add-shipping-address'),
     path('shipping-addresses/<int:address_id>/edit/', views.edit_shipping_address, name='edit-shipping-address'),
     path('shipping-addresses/<int:address_id>/delete/', views.delete_shipping_address, name='delete-shipping-address'),
+    path('search/', views.search_menu_items, name='search'),
 ]

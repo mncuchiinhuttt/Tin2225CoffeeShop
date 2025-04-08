@@ -31,6 +31,9 @@ class MenuItem(models.Model):
             return self.image.url
         return None
 
+    def get_absolute_url(self):
+        return reverse('menu-detail', kwargs={'pk': self.pk})
+
 class Size(models.Model):
     SIZE_CHOICES = [
         ('S', 'Small'),
