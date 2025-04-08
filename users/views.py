@@ -13,6 +13,7 @@ from datetime import timedelta, datetime
 from .forms import CommentForm, ShippingAddressForm
 import json
 from decimal import Decimal
+from django.db.models.functions import TruncMonth
 
 def forgot_password(request):
     return render(request, 'users/forgot_password.html')
@@ -513,22 +514,53 @@ def is_staff(user):
 def staff_orders(request):
     orders = Order.objects.all().order_by('-created_at')
     
-    # Apply filters
-    status = request.GET.get('status')
-    date = request.GET.get('date')
+    # Calculate overall statistics
+    total_orders = orders.count()
+    total_revenue = orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_delivered = orders.filter(status='DELIVERED').count()
+    avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
     
-    if status:
-        orders = orders.filter(status=status)
-    if date:
-        date_obj = datetime.strptime(date, '%Y-%m-%d')
-        orders = orders.filter(created_at__date=date_obj)
+    # Calculate monthly revenue data for the chart
+    today = timezone.now()
+    six_months_ago = today - timedelta(days=180)
     
-    # Pagination
-    paginator = Paginator(orders, 10)  # Show 10 orders per page
-    page = request.GET.get('page')
-    orders = paginator.get_page(page)
+    monthly_revenue = (
+        Order.objects
+        .filter(created_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(
+            total=Sum('total_amount'),
+            count=Count('id')
+        )
+        .order_by('month')
+    )
     
-    return render(request, 'users/staff_orders.html', {'orders': orders})
+    # Calculate predicted revenue (simple moving average)
+    revenue_data = list(monthly_revenue)
+    if len(revenue_data) >= 3:
+        last_3_months = [entry['total'] for entry in revenue_data[-3:]]
+        predicted_revenue = sum(last_3_months) / 3
+    else:
+        predicted_revenue = 0
+    
+    # Format data for the chart
+    chart_data = {
+        'labels': [entry['month'].strftime('%b %Y') for entry in revenue_data],
+        'actual': [float(entry['total']) for entry in revenue_data],
+        'predicted': [None] * (len(revenue_data) - 1) + [predicted_revenue] if revenue_data else []
+    }
+    
+    context = {
+        'orders': orders,
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'total_delivered': total_delivered,
+        'avg_order_value': avg_order_value,
+        'chart_data': json.dumps(chart_data),
+    }
+    
+    return render(request, 'users/staff_orders.html', context)
 
 @login_required
 @user_passes_test(is_staff)

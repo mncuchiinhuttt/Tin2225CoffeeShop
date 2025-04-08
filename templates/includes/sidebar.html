@@ -8,14 +8,14 @@
         <ul class="space-y-2">
             <li>
                 <a href="{% url 'home' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-home w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3">Home</span>
                 </a>
             </li>
             <li>
                 <a href="{% url 'menu-list' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-coffee w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3">Menu</span>
                 </a>
@@ -23,7 +23,7 @@
             {% if user.is_authenticated %}
             <li>
                 <a href="{% url 'cart-view' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-shopping-cart w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3 flex items-center">Cart 
                         {% with total=cart_items|length %}
@@ -36,14 +36,14 @@
             </li>
             <li>
                 <a href="{% url 'order-history' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-history w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3">Orders</span>
                 </a>
             </li>
             <li>
                 <a href="{% url 'shipping-addresses' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-map-marker-alt w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3">Shipping Addresses</span>
                 </a>
@@ -51,7 +51,7 @@
             {% endif %}
             <li>
                 <a href="{% url 'about' %}" 
-                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                   class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                     <i class="fas fa-info-circle w-5 h-5 text-gray-400 group-hover:text-white"></i>
                     <span class="ms-3">About</span>
                 </a>
@@ -141,18 +141,18 @@
                 <div class="flex flex-col space-y-3">
                     {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}" 
-                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                         <i class="fas fa-cog w-5 h-5 text-gray-400 group-hover:text-white"></i>
                         <span class="ms-3">Admin Dashboard</span>
                     </a>
                     <a href="{% url 'staff-orders' %}" 
-                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                         <i class="fas fa-clipboard-list w-5 h-5 text-gray-400 group-hover:text-white"></i>
                         <span class="ms-3">Manage Orders</span>
                     </a>
                     {% endif %}
                     <a href="{% url 'logout' %}" 
-                       class="flex items-center p-3 text-red-400 rounded-lg hover:bg-gray-700 group">
+                       class="flex items-center p-3 text-red-400 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                         <i class="fas fa-sign-out-alt w-5 h-5 group-hover:text-red-300"></i>
                         <span class="ms-3">Logout</span>
                     </a>
@@ -160,12 +160,12 @@
             {% else %}
                 <div class="flex flex-col space-y-2">
                     <a href="{% url 'login' %}" 
-                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                         <i class="fas fa-sign-in-alt w-5 h-5 text-gray-400 group-hover:text-white"></i>
                         <span class="ms-3">Login</span>
                     </a>
                     <a href="{% url 'register' %}" 
-                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group">
+                       class="flex items-center p-3 text-gray-300 rounded-lg hover:bg-gray-700 group transform transition-all duration-200 hover:scale-105">
                         <i class="fas fa-user-plus w-5 h-5 text-gray-400 group-hover:text-white"></i>
                         <span class="ms-3">Register</span>
                     </a>
